@@ -24,7 +24,10 @@ export function AppScreen({ children, scrollable = false }: AppScreenProps) {
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, styles.content]} edges={['top', 'right', 'bottom', 'left']}>
+    <SafeAreaView
+      style={[styles.safeArea, styles.content]}
+      edges={['top', 'right', 'bottom', 'left']}
+    >
       {children}
     </SafeAreaView>
   );
