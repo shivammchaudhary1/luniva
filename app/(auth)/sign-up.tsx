@@ -69,19 +69,30 @@ export default function SignUpScreen() {
         return;
       }
 
+      //   if (!data.session) {
+      //     Alert.alert(
+      //       'Check your email',
+      //       'Your account was created. Confirm your email, then return to Luniva and sign in.',
+      //       [
+      //         {
+      //           text: 'Go to sign in',
+      //           onPress: () => {
+      //             router.replace('/sign-in');
+      //           },
+      //         },
+      //       ],
+      //     );
+
+      //     return;
+      //   }
+
       if (!data.session) {
-        Alert.alert(
-          'Check your email',
-          'Your account was created. Confirm your email, then return to Luniva and sign in.',
-          [
-            {
-              text: 'Go to sign in',
-              onPress: () => {
-                router.replace('/sign-in');
-              },
-            },
-          ],
-        );
+        router.replace({
+          pathname: '/verify-email',
+          params: {
+            email: result.data.email,
+          },
+        });
 
         return;
       }
