@@ -21,6 +21,7 @@ export type PeriodEntry = {
 export type CycleOverview = {
   preferences: CyclePreferences | null;
   latestPeriod: PeriodEntry | null;
+  periodEntries: PeriodEntry[];
 };
 
 export type CompleteCycleSetupInput = {

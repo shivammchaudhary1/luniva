@@ -28,7 +28,7 @@ const periodColumns = `
 `;
 
 export async function getCycleOverview(userId: string): Promise<CycleOverview> {
-  const [preferencesResult, latestPeriodResult] = await Promise.all([
+  const [preferencesResult, periodEntriesResult] = await Promise.all([
     supabase
       .from('cycle_preferences')
       .select(preferenceColumns)
@@ -42,22 +42,25 @@ export async function getCycleOverview(userId: string): Promise<CycleOverview> {
       .order('started_on', {
         ascending: false,
       })
-      .limit(1)
-      .maybeSingle(),
+      .limit(24),
   ]);
 
   if (preferencesResult.error) {
     throw new Error(preferencesResult.error.message);
   }
 
-  if (latestPeriodResult.error) {
-    throw new Error(latestPeriodResult.error.message);
+  if (periodEntriesResult.error) {
+    throw new Error(periodEntriesResult.error.message);
   }
+
+  const periodEntries = (periodEntriesResult.data ?? []) as PeriodEntry[];
 
   return {
     preferences: preferencesResult.data as CyclePreferences | null,
 
-    latestPeriod: latestPeriodResult.data as PeriodEntry | null,
+    latestPeriod: periodEntries[0] ?? null,
+
+    periodEntries,
   };
 }
 

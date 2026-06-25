@@ -29,6 +29,8 @@ import type { CycleOverview } from '../../../src/features/cycle/types';
 
 import { cycleSetupSchema } from '../../../src/features/cycle/validation';
 
+import { CycleCalendar } from '../../../src/features/cycle/CycleCalendar';
+
 export default function CycleScreen() {
   const { user } = useAuth();
   const userId = user?.id;
@@ -207,6 +209,8 @@ export default function CycleScreen() {
           <Text style={styles.subtitle}>
             These dates are estimates based on the information you entered.
           </Text>
+
+          {overview ? <CycleCalendar overview={overview} /> : null}
 
           <View style={styles.estimateCard}>
             <Text style={styles.cardLabel}>Estimated next period</Text>
