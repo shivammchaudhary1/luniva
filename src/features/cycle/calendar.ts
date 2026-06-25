@@ -221,7 +221,8 @@ export function buildCycleCalendarModel(
   }
 
   for (const entry of overview.periodEntries) {
-    const recordedEnd = entry.ended_on ?? entry.started_on;
+    const recordedEnd =
+      entry.ended_on ?? addDaysToDateOnly(entry.started_on, Math.max(periodLength, 1) - 1);
 
     for (const date of getDateRange(entry.started_on, recordedEnd)) {
       setDayInsight(days, {
@@ -230,8 +231,8 @@ export function buildCycleCalendarModel(
         emoji: '🩸',
         title: 'Recorded period',
         description: entry.ended_on
-          ? 'This date is part of a period you recorded.'
-          : 'This is a recorded period start date.',
+          ? 'This date is part of a recorded bleeding range.'
+          : 'This date is displayed using your typical period duration because an end date was not recorded.',
       });
     }
   }

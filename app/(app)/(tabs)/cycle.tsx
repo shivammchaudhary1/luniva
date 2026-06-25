@@ -45,7 +45,9 @@ export default function CycleScreen() {
 
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [lastPeriodStartedOn, setLastPeriodStartedOn] = useState(getTodayDateOnly());
+  const [lastPeriodStartedOn, setLastPeriodStartedOn] = useState(
+    formatDateOnly(getTodayDateOnly()),
+  );
 
   const [typicalCycleLength, setTypicalCycleLength] = useState('28');
 
@@ -79,7 +81,7 @@ export default function CycleScreen() {
       }
 
       if (result.latestPeriod) {
-        setLastPeriodStartedOn(result.latestPeriod.started_on);
+        setLastPeriodStartedOn(formatDateOnly(result.latestPeriod.started_on));
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Unable to load cycle information.';
@@ -299,13 +301,13 @@ export default function CycleScreen() {
             keyboardType="numbers-and-punctuation"
             maxLength={10}
             onChangeText={setLastPeriodStartedOn}
-            placeholder="YYYY-MM-DD"
+            placeholder="DD/MM/YYYY"
             placeholderTextColor="#9B929F"
             style={styles.input}
             value={lastPeriodStartedOn}
           />
 
-          <Text style={styles.helperText}>Example: 2026-06-15</Text>
+          <Text style={styles.helperText}> Example: 15/06/2026</Text>
         </View>
 
         <View style={styles.formSection}>

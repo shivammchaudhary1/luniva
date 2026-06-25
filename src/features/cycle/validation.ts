@@ -1,6 +1,31 @@
 import { z } from 'zod';
 
-import { getTodayDateOnly, isValidDateOnly } from './date';
+import { getTodayDateOnly, parseDisplayDateToDateOnly } from './date';
+
+const displayDateSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{2}\/\d{2}\/\d{4}$/, 'Use the date format DD/MM/YYYY.')
+  .superRefine((value, context) => {
+    const parsedDate = parseDisplayDateToDateOnly(value);
+
+    if (!parsedDate) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Enter a valid calendar date.',
+      });
+
+      return;
+    }
+
+    if (parsedDate > getTodayDateOnly()) {
+      context.addIssue({
+        code: 'custom',
+        message: 'The last period date cannot be in the future.',
+      });
+    }
+  })
+  .transform((value) => parseDisplayDateToDateOnly(value) ?? value);
 
 const cycleLengthSchema = z
   .string()
@@ -20,15 +45,7 @@ const periodLengthSchema = z
 
 export const cycleSetupSchema = z
   .object({
-    lastPeriodStartedOn: z
-      .string()
-      .trim()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use the date format YYYY-MM-DD.')
-      .refine(isValidDateOnly, 'Enter a valid calendar date.')
-      .refine(
-        (value) => value <= getTodayDateOnly(),
-        'The last period date cannot be in the future.',
-      ),
+    lastPeriodStartedOn: displayDateSchema,
 
     typicalCycleLength: cycleLengthSchema,
 

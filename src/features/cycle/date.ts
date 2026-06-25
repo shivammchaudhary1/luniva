@@ -30,6 +30,20 @@ export function isValidDateOnly(value: string): boolean {
   );
 }
 
+export function parseDisplayDateToDateOnly(value: string): string | null {
+  const trimmedValue = value.trim();
+
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(trimmedValue)) {
+    return null;
+  }
+
+  const [dayText, monthText, yearText] = trimmedValue.split('/');
+
+  const internalDate = [yearText, monthText, dayText].join('-');
+
+  return isValidDateOnly(internalDate) ? internalDate : null;
+}
+
 export function addDaysToDateOnly(value: string, days: number): string {
   if (!isValidDateOnly(value)) {
     throw new Error('Invalid date value.');
@@ -49,14 +63,7 @@ export function formatDateOnly(value: string): string {
     return value;
   }
 
-  const [yearText, monthText, dayText] = value.split('-');
+  const [year, month, day] = value.split('-');
 
-  const date = new Date(Date.UTC(Number(yearText), Number(monthText) - 1, Number(dayText)));
-
-  return new Intl.DateTimeFormat(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  }).format(date);
+  return `${day}/${month}/${year}`;
 }
