@@ -7,6 +7,8 @@ export default function AppLayout() {
         headerShown: false,
         animation: 'fade',
       }}
-    />
+    >
+      <Stack.Screen name="(tabs)" />
+    </Stack>
   );
 }
