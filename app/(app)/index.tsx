@@ -13,16 +13,9 @@ import {
 import { useAuth } from '../../src/features/auth/AuthProvider';
 
 export default function DashboardScreen() {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
 
   const [isSigningOut, setIsSigningOut] = useState(false);
-
-  const rawDisplayName = user?.user_metadata?.display_name;
-
-  const displayName =
-    typeof rawDisplayName === 'string' && rawDisplayName.trim().length > 0
-      ? rawDisplayName.trim()
-      : 'Luniva user';
 
   const handleSignOut = async () => {
     if (isSigningOut) {
@@ -33,9 +26,6 @@ export default function DashboardScreen() {
 
     try {
       await signOut();
-
-      // Protected Routes automatically return
-      // the user to the sign-in screen.
     } catch {
       Alert.alert('Unable to sign out', 'Please try again.');
     } finally {
@@ -46,18 +36,22 @@ export default function DashboardScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.eyebrow}>AUTHENTICATED</Text>
+        <Text style={styles.eyebrow}>DASHBOARD</Text>
 
-        <Text style={styles.title}>Hello, {displayName}</Text>
+        <Text style={styles.title}>Hello, {profile?.display_name ?? 'Luniva user'}</Text>
 
-        <Text style={styles.subtitle}>Your Luniva account is ready.</Text>
+        <Text style={styles.subtitle}>Your private wellness space is ready.</Text>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Authentication successful</Text>
+          <Text style={styles.cardTitle}>Enabled features</Text>
 
-          <Text style={styles.cardText}>You are viewing a protected screen.</Text>
+          {profile?.cycle_module_enabled ? <Text style={styles.feature}>• Cycle Care</Text> : null}
 
-          <Text style={styles.label}>Signed in as</Text>
+          {profile?.journal_module_enabled ? (
+            <Text style={styles.feature}>• Private Journal</Text>
+          ) : null}
+
+          <Text style={styles.emailLabel}>Signed in as</Text>
 
           <Text style={styles.email}>{user?.email ?? 'Email unavailable'}</Text>
         </View>
@@ -123,13 +117,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#25182E',
   },
-  cardText: {
-    marginTop: 8,
-    fontSize: 15,
-    color: '#685E6D',
+  feature: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#3E3145',
   },
-  label: {
-    marginTop: 22,
+  emailLabel: {
+    marginTop: 24,
     fontSize: 13,
     fontWeight: '600',
     color: '#807585',

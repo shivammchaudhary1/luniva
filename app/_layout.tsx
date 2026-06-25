@@ -15,7 +15,7 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
-  const { session, isLoading } = useAuth();
+  const { session, profile, profileError, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -26,6 +26,18 @@ function RootNavigator() {
       </View>
     );
   }
+
+  if (session && profileError) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.errorTitle}>Unable to load your profile</Text>
+
+        <Text style={styles.errorText}>{profileError}</Text>
+      </View>
+    );
+  }
+
+  const hasCompletedOnboarding = profile?.onboarding_completed === true;
 
   return (
     <Stack
@@ -38,7 +50,11 @@ function RootNavigator() {
         <Stack.Screen name="(auth)" />
       </Stack.Protected>
 
-      <Stack.Protected guard={Boolean(session)}>
+      <Stack.Protected guard={Boolean(session) && !hasCompletedOnboarding}>
+        <Stack.Screen name="(onboarding)" />
+      </Stack.Protected>
+
+      <Stack.Protected guard={Boolean(session) && hasCompletedOnboarding}>
         <Stack.Screen name="(app)" />
       </Stack.Protected>
     </Stack>
@@ -50,11 +66,25 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 28,
     backgroundColor: '#F8F6FB',
   },
   loadingText: {
     marginTop: 14,
     fontSize: 16,
     color: '#685E6D',
+  },
+  errorTitle: {
+    fontSize: 21,
+    fontWeight: '700',
+    textAlign: 'center',
+    color: '#25182E',
+  },
+  errorText: {
+    marginTop: 10,
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+    color: '#C53D4D',
   },
 });
