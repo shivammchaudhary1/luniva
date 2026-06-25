@@ -68,6 +68,68 @@ function setDayInsight(days: Record<string, CycleDayInsight>, insight: CycleDayI
   days[insight.date] = insight;
 }
 
+function getMedian(values: number[]): number {
+  const sortedValues = [...values].sort((first, second) => first - second);
+
+  const middleIndex = Math.floor(sortedValues.length / 2);
+
+  if (sortedValues.length % 2 === 0) {
+    const leftValue = sortedValues[middleIndex - 1] ?? 0;
+
+    const rightValue = sortedValues[middleIndex] ?? 0;
+
+    return Math.round((leftValue + rightValue) / 2);
+  }
+
+  return sortedValues[middleIndex] ?? 0;
+}
+
+function getEffectiveCycleLength(overview: CycleOverview): {
+  length: number;
+  cyclesAnalyzed: number;
+  source: 'history' | 'setup';
+} {
+  const fallbackLength = overview.preferences?.typical_cycle_length ?? 28;
+
+  const entries = [...overview.periodEntries].sort((first, second) =>
+    first.started_on.localeCompare(second.started_on),
+  );
+
+  const intervals: number[] = [];
+
+  for (let index = 1; index < entries.length; index += 1) {
+    const previousEntry = entries[index - 1];
+
+    const currentEntry = entries[index];
+
+    if (!previousEntry || !currentEntry) {
+      continue;
+    }
+
+    const interval = differenceInDays(previousEntry.started_on, currentEntry.started_on);
+
+    if (interval >= 15 && interval <= 60) {
+      intervals.push(interval);
+    }
+  }
+
+  const recentIntervals = intervals.slice(-6);
+
+  if (recentIntervals.length >= 2) {
+    return {
+      length: getMedian(recentIntervals),
+      cyclesAnalyzed: recentIntervals.length,
+      source: 'history',
+    };
+  }
+
+  return {
+    length: fallbackLength,
+    cyclesAnalyzed: recentIntervals.length,
+    source: 'setup',
+  };
+}
+
 export function buildCycleCalendarModel(
   overview: CycleOverview,
   today = getTodayDateOnly(),
@@ -87,7 +149,9 @@ export function buildCycleCalendarModel(
     };
   }
 
-  const cycleLength = preferences.typical_cycle_length;
+  const cycleMetrics = getEffectiveCycleLength(overview);
+
+  const cycleLength = cycleMetrics.length;
 
   const periodLength = preferences.typical_period_length;
 

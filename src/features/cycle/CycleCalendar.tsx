@@ -14,12 +14,17 @@ import type { CycleDayInsight, UpcomingCycleItem } from './calendar';
 
 import type { CycleOverview, PeriodEntry } from './types';
 
+import { PeriodHistoryManager } from './PeriodHistoryManager';
+
 type CalendarMarkedDates = NonNullable<ComponentProps<typeof Calendar>['markedDates']>;
 
 type CycleViewMode = 'calendar' | 'list' | 'guide';
 
 type CycleCalendarProps = {
   overview: CycleOverview;
+  onDataChanged: () => Promise<void>;
+  onPeriodSaved: (periodEntry: PeriodEntry) => void;
+  onPeriodDeleted: (periodEntryId: string) => void;
 };
 
 const markerColors = {
@@ -87,7 +92,12 @@ function formatDateRange(startDate: string, endDate: string | null): string {
   return `${formatDateOnly(startDate)} – ${formatDateOnly(endDate)}`;
 }
 
-export function CycleCalendar({ overview }: CycleCalendarProps) {
+export function CycleCalendar({
+  overview,
+  onDataChanged,
+  onPeriodSaved,
+  onPeriodDeleted,
+}: CycleCalendarProps) {
   const [selectedDate, setSelectedDate] = useState(getTodayDateOnly());
 
   const [viewMode, setViewMode] = useState<CycleViewMode>('calendar');
@@ -162,7 +172,15 @@ export function CycleCalendar({ overview }: CycleCalendarProps) {
         />
       ) : null}
 
-      {viewMode === 'list' ? <ListView model={model} overview={overview} /> : null}
+      {viewMode === 'list' ? (
+        <ListView
+          model={model}
+          onDataChanged={onDataChanged}
+          onPeriodDeleted={onPeriodDeleted}
+          onPeriodSaved={onPeriodSaved}
+          overview={overview}
+        />
+      ) : null}
 
       {viewMode === 'guide' ? (
         <GuideView
@@ -270,9 +288,18 @@ function CalendarView({
 type ListViewProps = {
   model: ReturnType<typeof buildCycleCalendarModel>;
   overview: CycleOverview;
+  onDataChanged: () => Promise<void>;
+  onPeriodSaved: (periodEntry: PeriodEntry) => void;
+  onPeriodDeleted: (periodEntryId: string) => void;
 };
 
-function ListView({ model, overview }: ListViewProps) {
+function ListView({
+  model,
+  overview,
+  onDataChanged,
+  onPeriodSaved,
+  onPeriodDeleted,
+}: ListViewProps) {
   const typicalPeriodLength = overview.preferences?.typical_period_length ?? 1;
 
   return (
@@ -344,6 +371,12 @@ function ListView({ model, overview }: ListViewProps) {
       </View>
 
       <SafetyNotice fertilityMessage={model.fertilityMessage} />
+      <PeriodHistoryManager
+        onDataChanged={onDataChanged}
+        onPeriodDeleted={onPeriodDeleted}
+        onPeriodSaved={onPeriodSaved}
+        periodEntries={overview.periodEntries}
+      />
     </>
   );
 }

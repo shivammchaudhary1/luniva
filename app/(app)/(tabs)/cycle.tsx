@@ -25,7 +25,7 @@ import {
 
 import { getCycleOverview, saveCycleSetup } from '../../../src/features/cycle/repository';
 
-import type { CycleOverview } from '../../../src/features/cycle/types';
+import type { CycleOverview, PeriodEntry } from '../../../src/features/cycle/types';
 
 import { cycleSetupSchema } from '../../../src/features/cycle/validation';
 
@@ -91,6 +91,50 @@ export default function CycleScreen() {
       setIsLoading(false);
     }
   }, [userId]);
+
+  const applySavedPeriod = useCallback((savedPeriod: PeriodEntry) => {
+    setOverview((currentOverview) => {
+      if (!currentOverview) {
+        return currentOverview;
+      }
+
+      const periodExists = currentOverview.periodEntries.some(
+        (entry) => entry.id === savedPeriod.id,
+      );
+
+      const periodEntries = periodExists
+        ? currentOverview.periodEntries.map((entry) =>
+            entry.id === savedPeriod.id ? savedPeriod : entry,
+          )
+        : [savedPeriod, ...currentOverview.periodEntries];
+
+      periodEntries.sort((first, second) => second.started_on.localeCompare(first.started_on));
+
+      return {
+        ...currentOverview,
+        periodEntries,
+        latestPeriod: periodEntries[0] ?? null,
+      };
+    });
+  }, []);
+
+  const applyDeletedPeriod = useCallback((periodEntryId: string) => {
+    setOverview((currentOverview) => {
+      if (!currentOverview) {
+        return currentOverview;
+      }
+
+      const periodEntries = currentOverview.periodEntries.filter(
+        (entry) => entry.id !== periodEntryId,
+      );
+
+      return {
+        ...currentOverview,
+        periodEntries,
+        latestPeriod: periodEntries[0] ?? null,
+      };
+    });
+  }, []);
 
   useEffect(() => {
     void loadOverview();
@@ -212,7 +256,14 @@ export default function CycleScreen() {
             These dates are estimates based on the information you entered.
           </Text>
 
-          {overview ? <CycleCalendar overview={overview} /> : null}
+          {overview ? (
+            <CycleCalendar
+              onDataChanged={loadOverview}
+              onPeriodDeleted={applyDeletedPeriod}
+              onPeriodSaved={applySavedPeriod}
+              overview={overview}
+            />
+          ) : null}
 
           <View style={styles.estimateCard}>
             <Text style={styles.cardLabel}>Estimated next period</Text>
@@ -293,7 +344,11 @@ export default function CycleScreen() {
         </Text>
 
         <View style={styles.formSection}>
-          <Text style={styles.label}>Last period start date</Text>
+          <Text style={styles.label}>
+            {!setupCompleted ? (
+              <View style={styles.formSection}>{/* Existing last-period date input */}</View>
+            ) : null}
+          </Text>
 
           <TextInput
             autoCapitalize="none"

@@ -81,3 +81,67 @@ export async function saveCycleSetup(input: CompleteCycleSetupInput): Promise<vo
     throw new Error(error.message);
   }
 }
+
+export type SavePeriodEntryInput = {
+  ownerUserId: string;
+  startedOn: string;
+  endedOn: string | null;
+};
+
+export async function createPeriodEntry(input: SavePeriodEntryInput): Promise<PeriodEntry> {
+  const { data, error } = await supabase
+    .from('period_entries')
+    .insert({
+      owner_user_id: input.ownerUserId,
+      started_on: input.startedOn,
+      ended_on: input.endedOn,
+    })
+    .select(periodColumns)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as PeriodEntry;
+}
+
+export async function updatePeriodEntry(
+  periodEntryId: string,
+  input: SavePeriodEntryInput,
+): Promise<PeriodEntry> {
+  const { data, error } = await supabase
+    .from('period_entries')
+    .update({
+      started_on: input.startedOn,
+      ended_on: input.endedOn,
+    })
+    .eq('id', periodEntryId)
+    .eq('owner_user_id', input.ownerUserId)
+    .select(periodColumns)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error(
+      'The period could not be updated. It may no longer exist or you may not have permission to edit it.',
+    );
+  }
+
+  return data as PeriodEntry;
+}
+
+export async function deletePeriodEntry(periodEntryId: string, ownerUserId: string): Promise<void> {
+  const { error } = await supabase
+    .from('period_entries')
+    .delete()
+    .eq('id', periodEntryId)
+    .eq('owner_user_id', ownerUserId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
