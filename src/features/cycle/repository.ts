@@ -5,6 +5,7 @@ import type {
   CycleOverview,
   CyclePreferences,
   PeriodEntry,
+  CyclePredictionCheckin,
   CyclePredictionResponseResult,
   RespondToCyclePredictionInput,
 } from './types';
@@ -25,6 +26,17 @@ const periodColumns = `
   owner_user_id,
   started_on,
   ended_on,
+  created_at,
+  updated_at
+`;
+
+const cyclePredictionCheckinColumns = `
+  id,
+  owner_user_id,
+  predicted_start_on,
+  response,
+  actual_start_on,
+  responded_at,
   created_at,
   updated_at
 `;
@@ -196,4 +208,22 @@ export async function respondToCyclePrediction(
 
     periodEntry: payload.period_entry,
   };
+}
+
+export async function getCyclePredictionCheckin(
+  ownerUserId: string,
+  predictedStartOn: string,
+): Promise<CyclePredictionCheckin | null> {
+  const { data, error } = await supabase
+    .from('cycle_prediction_checkins')
+    .select(cyclePredictionCheckinColumns)
+    .eq('owner_user_id', ownerUserId)
+    .eq('predicted_start_on', predictedStartOn)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as CyclePredictionCheckin | null;
 }
