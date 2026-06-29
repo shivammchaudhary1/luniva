@@ -15,9 +15,10 @@ import {
 
 import { router, useLocalSearchParams } from 'expo-router';
 
+import { BrandLogo } from '../../src/components/BrandLogo';
 import { emailSchema, verifyEmailSchema } from '../../src/features/auth/validation';
-
 import { supabase } from '../../src/lib/supabase/client';
+import { colors } from '../../src/theme/colors';
 
 type VerificationParams = {
   email?: string | string[];
@@ -153,9 +154,13 @@ export default function VerifyEmailScreen() {
       style={styles.keyboardView}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <View style={styles.logoContainer}>
+          <BrandLogo size={170} />
+        </View>
+
         <Text style={styles.eyebrow}>VERIFY YOUR EMAIL</Text>
 
-        <Text style={styles.title}>Enter your code</Text>
+        <Text style={styles.title}>Verify your email</Text>
 
         <Text style={styles.subtitle}>We sent a verification code to your email address.</Text>
 
@@ -170,7 +175,7 @@ export default function VerifyEmailScreen() {
             keyboardType="email-address"
             onChangeText={setEmail}
             placeholder="you@example.com"
-            placeholderTextColor="#9B929F"
+            placeholderTextColor={colors.textDisabled}
             style={styles.input}
             textContentType="emailAddress"
             value={email}
@@ -190,7 +195,7 @@ export default function VerifyEmailScreen() {
               void handleVerify();
             }}
             placeholder="Enter Code"
-            placeholderTextColor="#9B929F"
+            placeholderTextColor={colors.textDisabled}
             returnKeyType="done"
             style={[styles.input, styles.codeInput]}
             textContentType="oneTimeCode"
@@ -210,7 +215,7 @@ export default function VerifyEmailScreen() {
             ]}
           >
             {isVerifying ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color={colors.textOnPrimary} />
             ) : (
               <Text style={styles.primaryButtonText}>Verify email</Text>
             )}
@@ -229,7 +234,7 @@ export default function VerifyEmailScreen() {
             ]}
           >
             {isResending ? (
-              <ActivityIndicator color="#6E3B78" />
+              <ActivityIndicator color={colors.primary} />
             ) : (
               <Text style={styles.secondaryButtonText}>Resend code</Text>
             )}
@@ -257,7 +262,7 @@ export default function VerifyEmailScreen() {
 const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
-    backgroundColor: '#F8F6FB',
+    backgroundColor: colors.background,
   },
   container: {
     flexGrow: 1,
@@ -269,19 +274,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 1.2,
-    color: '#6E3B78',
+    color: colors.primary,
   },
   title: {
     marginTop: 10,
     fontSize: 34,
     fontWeight: '800',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   subtitle: {
     marginTop: 10,
     fontSize: 16,
     lineHeight: 23,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   form: {
     marginTop: 30,
@@ -290,18 +295,18 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontSize: 14,
     fontWeight: '600',
-    color: '#3E3145',
+    color: colors.textPrimary,
   },
   input: {
     minHeight: 52,
     marginBottom: 18,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: '#DED6E2',
+    borderColor: colors.border,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     fontSize: 16,
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   codeInput: {
     textAlign: 'center',
@@ -315,12 +320,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 6,
     borderRadius: 14,
-    backgroundColor: '#6E3B78',
+    backgroundColor: colors.primary,
   },
   primaryButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
   },
   secondaryButton: {
     minHeight: 52,
@@ -328,17 +333,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 14,
     borderWidth: 1,
-    borderColor: '#6E3B78',
+    borderColor: colors.primary,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   secondaryButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#6E3B78',
+    color: colors.primary,
   },
   buttonPressed: {
-    opacity: 0.82,
+    opacity: 0.86,
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -350,12 +355,16 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 15,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   linkText: {
     marginLeft: 6,
     fontSize: 15,
     fontWeight: '700',
-    color: '#6E3B78',
+    color: colors.primary,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 4,
   },
 });

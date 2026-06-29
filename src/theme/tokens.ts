@@ -1,14 +1,16 @@
+import { colors } from './colors';
+
 export const theme = Object.freeze({
   colors: {
-    background: '#FFF8FA',
-    surface: '#FFFFFF',
-    primary: '#9D174D',
-    primarySoft: '#FCE7F3',
-    onPrimary: '#FFFFFF',
-    text: '#25171D',
-    textMuted: '#6F5963',
-    border: '#EADCE2',
-    danger: '#B42318',
+    background: colors.background,
+    surface: colors.surface,
+    primary: colors.primary,
+    primarySoft: colors.primarySurface,
+    onPrimary: colors.textOnPrimary,
+    text: colors.textPrimary,
+    textMuted: colors.textMuted,
+    border: colors.border,
+    danger: colors.danger,
   },
   spacing: {
     xs: 4,

@@ -4,7 +4,9 @@ import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { BrandLogo } from '../../../src/components/BrandLogo';
 import { useAuth } from '../../../src/features/auth/AuthProvider';
+import { colors } from '../../../src/theme/colors';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -18,7 +20,7 @@ function DashboardModuleCard({ title, description, icon }: DashboardModuleCardPr
   return (
     <View style={styles.moduleCard}>
       <View style={styles.moduleIcon}>
-        <Ionicons color="#6E3B78" name={icon} size={25} />
+        <Ionicons color={colors.primary} name={icon} size={25} />
       </View>
 
       <View style={styles.moduleContent}>
@@ -27,7 +29,7 @@ function DashboardModuleCard({ title, description, icon }: DashboardModuleCardPr
         <Text style={styles.moduleDescription}>{description}</Text>
       </View>
 
-      <Ionicons color="#A69BA9" name="checkmark-circle" size={22} />
+      <Ionicons color={colors.borderStrong} name="checkmark-circle" size={22} />
     </View>
   );
 }
@@ -42,6 +44,10 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.homeLogo}>
+          <BrandLogo size={112} />
+        </View>
+
         <Text style={styles.eyebrow}>YOUR PRIVATE SPACE</Text>
 
         <Text style={styles.title}>Hello, {firstName}</Text>
@@ -50,7 +56,7 @@ export default function HomeScreen() {
 
         <View style={styles.summaryCard}>
           <View style={styles.summaryIcon}>
-            <Ionicons color="#1D8A57" name="shield-checkmark" size={29} />
+            <Ionicons color={colors.success} name="shield-checkmark" size={29} />
           </View>
 
           <View style={styles.summaryContent}>
@@ -104,7 +110,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8F6FB',
+    backgroundColor: colors.background,
   },
   container: {
     paddingHorizontal: 24,
@@ -115,19 +121,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 1.2,
-    color: '#6E3B78',
+    color: colors.primary,
   },
   title: {
     marginTop: 9,
     fontSize: 34,
     fontWeight: '800',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   subtitle: {
     marginTop: 8,
     fontSize: 16,
     lineHeight: 23,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   summaryCard: {
     flexDirection: 'row',
@@ -135,7 +141,7 @@ const styles = StyleSheet.create({
     marginTop: 26,
     padding: 19,
     borderRadius: 18,
-    backgroundColor: '#EAF6F0',
+    backgroundColor: colors.successSurface,
   },
   summaryIcon: {
     width: 52,
@@ -143,7 +149,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 26,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   summaryContent: {
     flex: 1,
@@ -152,20 +158,20 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1F553C',
+    color: colors.success,
   },
   summaryDescription: {
     marginTop: 5,
     fontSize: 13,
     lineHeight: 19,
-    color: '#3C7358',
+    color: colors.success,
   },
   sectionTitle: {
     marginTop: 30,
     marginBottom: 2,
     fontSize: 20,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   moduleCard: {
     flexDirection: 'row',
@@ -173,7 +179,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     padding: 17,
     borderRadius: 17,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   moduleIcon: {
     width: 48,
@@ -181,7 +187,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 15,
-    backgroundColor: '#F0E7F3',
+    backgroundColor: colors.primarySurface,
   },
   moduleContent: {
     flex: 1,
@@ -190,38 +196,42 @@ const styles = StyleSheet.create({
   moduleTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   moduleDescription: {
     marginTop: 4,
     fontSize: 13,
     lineHeight: 19,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   nextCard: {
     marginTop: 26,
     padding: 21,
     borderWidth: 1,
-    borderColor: '#DED6E2',
+    borderColor: colors.border,
     borderRadius: 18,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   nextEyebrow: {
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 1,
-    color: '#6E3B78',
+    color: colors.primary,
   },
   nextTitle: {
     marginTop: 9,
     fontSize: 18,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   nextDescription: {
     marginTop: 8,
     fontSize: 14,
     lineHeight: 21,
-    color: '#685E6D',
+    color: colors.textSecondary,
+  },
+  homeLogo: {
+    alignItems: 'flex-start',
+    marginBottom: 8,
   },
 });

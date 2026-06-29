@@ -30,6 +30,7 @@ import type { CycleOverview, PeriodEntry } from '../../../src/features/cycle/typ
 import { cycleSetupSchema } from '../../../src/features/cycle/validation';
 
 import { CycleCalendar } from '../../../src/features/cycle/CycleCalendar';
+import { colors } from '../../../src/theme/colors';
 
 export default function CycleScreen() {
   const { user } = useAuth();
@@ -208,7 +209,7 @@ export default function CycleScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centered}>
-          <ActivityIndicator size="large" />
+          <ActivityIndicator color={colors.primary} size="large" />
 
           <Text style={styles.loadingText}>Loading Cycle Care...</Text>
         </View>
@@ -220,7 +221,7 @@ export default function CycleScreen() {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centered}>
-          <Ionicons color="#C53D4D" name="alert-circle-outline" size={42} />
+          <Ionicons color={colors.danger} name="alert-circle-outline" size={42} />
 
           <Text style={styles.errorTitle}>Unable to load Cycle Care</Text>
 
@@ -319,7 +320,7 @@ export default function CycleScreen() {
             }}
             style={styles.secondaryButton}
           >
-            <Ionicons color="#6E3B78" name="create-outline" size={20} />
+            <Ionicons color={colors.primary} name="create-outline" size={20} />
 
             <Text style={styles.secondaryButtonText}>Edit cycle setup</Text>
           </Pressable>
@@ -344,11 +345,7 @@ export default function CycleScreen() {
         </Text>
 
         <View style={styles.formSection}>
-          <Text style={styles.label}>
-            {!setupCompleted ? (
-              <View style={styles.formSection}>{/* Existing last-period date input */}</View>
-            ) : null}
-          </Text>
+          <Text style={styles.label}>Last period started</Text>
 
           <TextInput
             autoCapitalize="none"
@@ -357,7 +354,7 @@ export default function CycleScreen() {
             maxLength={10}
             onChangeText={setLastPeriodStartedOn}
             placeholder="DD/MM/YYYY"
-            placeholderTextColor="#9B929F"
+            placeholderTextColor={colors.textDisabled}
             style={styles.input}
             value={lastPeriodStartedOn}
           />
@@ -376,7 +373,7 @@ export default function CycleScreen() {
               setTypicalCycleLength(value.replace(/\D/g, ''));
             }}
             placeholder="28"
-            placeholderTextColor="#9B929F"
+            placeholderTextColor={colors.textDisabled}
             style={styles.input}
             value={typicalCycleLength}
           />
@@ -397,7 +394,7 @@ export default function CycleScreen() {
               setTypicalPeriodLength(value.replace(/\D/g, ''));
             }}
             placeholder="5"
-            placeholderTextColor="#9B929F"
+            placeholderTextColor={colors.textDisabled}
             style={styles.input}
             value={typicalPeriodLength}
           />
@@ -444,7 +441,7 @@ export default function CycleScreen() {
           ]}
         >
           {isSaving ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={colors.textOnPrimary} />
           ) : (
             <Text style={styles.primaryButtonText}>Save cycle setup</Text>
           )}
@@ -485,7 +482,7 @@ function SummaryRow({ label, value }: SummaryRowProps) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8F6FB',
+    backgroundColor: colors.background,
   },
   container: {
     paddingHorizontal: 24,
@@ -501,38 +498,38 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 14,
     fontSize: 16,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   errorTitle: {
     marginTop: 15,
     fontSize: 20,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   errorText: {
     marginTop: 9,
     fontSize: 15,
     lineHeight: 22,
     textAlign: 'center',
-    color: '#C53D4D',
+    color: colors.danger,
   },
   eyebrow: {
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 1.2,
-    color: '#6E3B78',
+    color: colors.primary,
   },
   title: {
     marginTop: 9,
     fontSize: 34,
     fontWeight: '800',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   subtitle: {
     marginTop: 9,
     fontSize: 16,
     lineHeight: 23,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   formSection: {
     marginTop: 24,
@@ -541,23 +538,23 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontSize: 14,
     fontWeight: '600',
-    color: '#3E3145',
+    color: colors.textPrimary,
   },
   input: {
     minHeight: 52,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: '#DED6E2',
+    borderColor: colors.border,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     fontSize: 16,
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   helperText: {
     marginTop: 7,
     fontSize: 13,
     lineHeight: 19,
-    color: '#807585',
+    color: colors.textMuted,
   },
   switchCard: {
     flexDirection: 'row',
@@ -565,7 +562,7 @@ const styles = StyleSheet.create({
     marginTop: 18,
     padding: 17,
     borderRadius: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   switchContent: {
     flex: 1,
@@ -574,13 +571,13 @@ const styles = StyleSheet.create({
   switchTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   switchDescription: {
     marginTop: 5,
     fontSize: 13,
     lineHeight: 19,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   primaryButton: {
     minHeight: 54,
@@ -589,12 +586,12 @@ const styles = StyleSheet.create({
     marginTop: 28,
     paddingHorizontal: 20,
     borderRadius: 14,
-    backgroundColor: '#6E3B78',
+    backgroundColor: colors.primary,
   },
   primaryButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
   },
   secondaryButton: {
     minHeight: 52,
@@ -603,15 +600,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 20,
     borderWidth: 1,
-    borderColor: '#6E3B78',
+    borderColor: colors.primary,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   secondaryButtonText: {
     marginLeft: 8,
     fontSize: 16,
     fontWeight: '700',
-    color: '#6E3B78',
+    color: colors.primary,
   },
   cancelButton: {
     alignItems: 'center',
@@ -621,10 +618,10 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   buttonPressed: {
-    opacity: 0.82,
+    opacity: 0.86,
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -633,31 +630,31 @@ const styles = StyleSheet.create({
     marginTop: 26,
     padding: 22,
     borderRadius: 18,
-    backgroundColor: '#F0E7F3',
+    backgroundColor: colors.primarySurface,
   },
   cardLabel: {
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.5,
-    color: '#6E3B78',
+    color: colors.primary,
   },
   estimateDate: {
     marginTop: 8,
     fontSize: 27,
     fontWeight: '800',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   disclaimer: {
     marginTop: 12,
     fontSize: 13,
     lineHeight: 19,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   summaryCard: {
     marginTop: 18,
     paddingHorizontal: 18,
     borderRadius: 18,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   summaryRow: {
     minHeight: 57,
@@ -668,17 +665,17 @@ const styles = StyleSheet.create({
   summaryLabel: {
     flex: 1,
     fontSize: 14,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   summaryValue: {
     flex: 1,
     fontSize: 14,
     fontWeight: '700',
     textAlign: 'right',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: '#E7E0E9',
+    backgroundColor: colors.divider,
   },
 });
