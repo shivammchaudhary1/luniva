@@ -1,69 +1,71 @@
-function padDatePart(value: number): string {
-  return String(value).padStart(2, '0');
-}
+export * from '../../lib/date';
 
-export function getTodayDateOnly(): string {
-  const today = new Date();
+// function padDatePart(value: number): string {
+//   return String(value).padStart(2, '0');
+// }
 
-  return [
-    today.getFullYear(),
-    padDatePart(today.getMonth() + 1),
-    padDatePart(today.getDate()),
-  ].join('-');
-}
+// export function getTodayDateOnly(): string {
+//   const today = new Date();
 
-export function isValidDateOnly(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return false;
-  }
+//   return [
+//     today.getFullYear(),
+//     padDatePart(today.getMonth() + 1),
+//     padDatePart(today.getDate()),
+//   ].join('-');
+// }
 
-  const [yearText, monthText, dayText] = value.split('-');
+// export function isValidDateOnly(value: string): boolean {
+//   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+//     return false;
+//   }
 
-  const year = Number(yearText);
-  const month = Number(monthText);
-  const day = Number(dayText);
+//   const [yearText, monthText, dayText] = value.split('-');
 
-  const date = new Date(Date.UTC(year, month - 1, day));
+//   const year = Number(yearText);
+//   const month = Number(monthText);
+//   const day = Number(dayText);
 
-  return (
-    date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
-  );
-}
+//   const date = new Date(Date.UTC(year, month - 1, day));
 
-export function parseDisplayDateToDateOnly(value: string): string | null {
-  const trimmedValue = value.trim();
+//   return (
+//     date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+//   );
+// }
 
-  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(trimmedValue)) {
-    return null;
-  }
+// export function parseDisplayDateToDateOnly(value: string): string | null {
+//   const trimmedValue = value.trim();
 
-  const [dayText, monthText, yearText] = trimmedValue.split('/');
+//   if (!/^\d{2}\/\d{2}\/\d{4}$/.test(trimmedValue)) {
+//     return null;
+//   }
 
-  const internalDate = [yearText, monthText, dayText].join('-');
+//   const [dayText, monthText, yearText] = trimmedValue.split('/');
 
-  return isValidDateOnly(internalDate) ? internalDate : null;
-}
+//   const internalDate = [yearText, monthText, dayText].join('-');
 
-export function addDaysToDateOnly(value: string, days: number): string {
-  if (!isValidDateOnly(value)) {
-    throw new Error('Invalid date value.');
-  }
+//   return isValidDateOnly(internalDate) ? internalDate : null;
+// }
 
-  const [yearText, monthText, dayText] = value.split('-');
+// export function addDaysToDateOnly(value: string, days: number): string {
+//   if (!isValidDateOnly(value)) {
+//     throw new Error('Invalid date value.');
+//   }
 
-  const date = new Date(Date.UTC(Number(yearText), Number(monthText) - 1, Number(dayText)));
+//   const [yearText, monthText, dayText] = value.split('-');
 
-  date.setUTCDate(date.getUTCDate() + days);
+//   const date = new Date(Date.UTC(Number(yearText), Number(monthText) - 1, Number(dayText)));
 
-  return date.toISOString().slice(0, 10);
-}
+//   date.setUTCDate(date.getUTCDate() + days);
 
-export function formatDateOnly(value: string): string {
-  if (!isValidDateOnly(value)) {
-    return value;
-  }
+//   return date.toISOString().slice(0, 10);
+// }
 
-  const [year, month, day] = value.split('-');
+// export function formatDateOnly(value: string): string {
+//   if (!isValidDateOnly(value)) {
+//     return value;
+//   }
 
-  return `${day}/${month}/${year}`;
-}
+//   const [year, month, day] = value.split('-');
+
+//   return `${day}/${month}/${year}`;
+// }

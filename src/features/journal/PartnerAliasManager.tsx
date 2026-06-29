@@ -14,7 +14,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { colors } from '../../theme/colors';
 import { useAuth } from '../auth/AuthProvider';
-
 import {
   createPartnerAlias,
   deletePartnerAlias,
@@ -38,6 +37,10 @@ type FormMode =
       type: 'edit';
       aliasId: string;
     };
+
+type PartnerAliasManagerProps = {
+  onAliasesChanged?: () => void;
+};
 
 const relationshipOptions: {
   value: RelationshipCategory;
@@ -130,12 +133,11 @@ function sortAliases(aliases: PartnerAlias[]): PartnerAlias[] {
   });
 }
 
-export function PartnerAliasManager() {
+export function PartnerAliasManager({ onAliasesChanged }: PartnerAliasManagerProps) {
   const { user } = useAuth();
   const userId = user?.id;
 
   const [aliases, setAliases] = useState<PartnerAlias[]>([]);
-
   const [formMode, setFormMode] = useState<FormMode>({
     type: 'closed',
   });
@@ -273,7 +275,11 @@ export function PartnerAliasManager() {
         savedAlias = await createPartnerAlias(userId, result.data);
       }
 
+      // applySavedAlias(savedAlias);
+      // resetForm();
+
       applySavedAlias(savedAlias);
+      onAliasesChanged?.();
       resetForm();
 
       Alert.alert('Private alias saved', 'This alias is visible only inside your account.');
@@ -302,6 +308,7 @@ export function PartnerAliasManager() {
       const savedAlias = await setPartnerAliasArchived(alias.id, userId, isArchived);
 
       applySavedAlias(savedAlias);
+      onAliasesChanged?.();
     } catch (error: unknown) {
       Alert.alert(
         'Unable to update alias',
@@ -345,6 +352,8 @@ export function PartnerAliasManager() {
       setAliases((currentAliases) =>
         currentAliases.filter((currentAlias) => currentAlias.id !== alias.id),
       );
+
+      onAliasesChanged?.();
     } catch (error: unknown) {
       Alert.alert(
         'Unable to delete alias',
