@@ -30,13 +30,23 @@ import type { CycleOverview, PeriodEntry } from '../../../src/features/cycle/typ
 import { cycleSetupSchema } from '../../../src/features/cycle/validation';
 
 import { CycleCalendar } from '../../../src/features/cycle/CycleCalendar';
+
 import { colors } from '../../../src/theme/colors';
+
+import { CyclePredictionCheckinCard } from '../../../src/features/cycle/CyclePredictionCheckinCard';
+
+import { getNextPredictedPeriodStart } from '../../../src/features/cycle/prediction';
 
 export default function CycleScreen() {
   const { user } = useAuth();
   const userId = user?.id;
 
   const [overview, setOverview] = useState<CycleOverview | null>(null);
+
+  const predictedStartOn = useMemo(
+    () => (overview ? getNextPredictedPeriodStart(overview) : null),
+    [overview],
+  );
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -263,6 +273,15 @@ export default function CycleScreen() {
               onPeriodDeleted={applyDeletedPeriod}
               onPeriodSaved={applySavedPeriod}
               overview={overview}
+            />
+          ) : null}
+
+          {predictedStartOn ? (
+            <CyclePredictionCheckinCard
+              key={predictedStartOn}
+              onDataChanged={loadOverview}
+              onPeriodSaved={applySavedPeriod}
+              predictedStartOn={predictedStartOn}
             />
           ) : null}
 
