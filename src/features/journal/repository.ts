@@ -208,3 +208,61 @@ export async function createIntimacyEntry(
 
   return data as unknown as IntimacyEntryWithAlias;
 }
+
+export async function updateIntimacyEntry(
+  entryId: string,
+  ownerUserId: string,
+  input: IntimacyEntryWriteInput,
+): Promise<IntimacyEntryWithAlias> {
+  const { data, error } = await supabase
+    .from('intimacy_entries')
+    .update({
+      partner_alias_id: input.partnerAliasId,
+
+      occurred_on: input.occurredOn,
+
+      approximate_time: input.approximateTime,
+
+      location_category: input.locationCategory,
+
+      protection_method: input.protectionMethod,
+
+      consent_status: input.consentStatus,
+
+      mood_before: input.moodBefore,
+
+      mood_after: input.moodAfter,
+
+      intimacy_category: input.intimacyCategory,
+
+      tags: input.tags,
+
+      private_note: input.privateNote,
+    })
+    .eq('id', entryId)
+    .eq('owner_user_id', ownerUserId)
+    .select(intimacyEntryColumns)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error('The private entry could not be updated.');
+  }
+
+  return data as unknown as IntimacyEntryWithAlias;
+}
+
+export async function deleteIntimacyEntry(entryId: string, ownerUserId: string): Promise<void> {
+  const { error } = await supabase
+    .from('intimacy_entries')
+    .delete()
+    .eq('id', entryId)
+    .eq('owner_user_id', ownerUserId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}

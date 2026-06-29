@@ -1,3 +1,5 @@
+import type { ComponentProps } from 'react';
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
@@ -12,12 +14,20 @@ import {
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { Calendar } from 'react-native-calendars';
+
 import { formatDateOnly, getTodayDateOnly } from '../../lib/date';
 
 import { colors } from '../../theme/colors';
 import { useAuth } from '../auth/AuthProvider';
 
-import { createIntimacyEntry, getPartnerAliases, getRecentIntimacyEntries } from './repository';
+import {
+  createIntimacyEntry,
+  deleteIntimacyEntry,
+  getPartnerAliases,
+  getRecentIntimacyEntries,
+  updateIntimacyEntry,
+} from './repository';
 
 import type {
   ConsentStatus,
@@ -31,9 +41,25 @@ import type {
 
 import { intimacyEntrySchema } from './validation';
 
+type CalendarMarkedDates = NonNullable<ComponentProps<typeof Calendar>['markedDates']>;
+
 type JournalEntryManagerProps = {
   aliasRevision: number;
 };
+
+type JournalViewMode = 'calendar' | 'list' | 'guide';
+
+type EntryFormMode =
+  | {
+      type: 'closed';
+    }
+  | {
+      type: 'create';
+    }
+  | {
+      type: 'edit';
+      entryId: string;
+    };
 
 type LabeledOption<T extends string> = {
   value: T;
@@ -183,9 +209,17 @@ const protectionLabels = Object.fromEntries(
   protectionOptions.map((option) => [option.value, option.label]),
 ) as Record<ProtectionMethod, string>;
 
+const consentLabels = Object.fromEntries(
+  consentOptions.map((option) => [option.value, option.label]),
+) as Record<ConsentStatus, string>;
+
 const moodLabels = Object.fromEntries(
   moodOptions.map((option) => [option.value, `${option.emoji ?? ''} ${option.label}`.trim()]),
 ) as Record<JournalMood, string>;
+
+const categoryLabels = Object.fromEntries(
+  categoryOptions.map((option) => [option.value, `${option.emoji ?? ''} ${option.label}`.trim()]),
+) as Record<IntimacyCategory, string>;
 
 function formatTime(value: string | null): string | null {
   if (!value) {
@@ -193,6 +227,18 @@ function formatTime(value: string | null): string | null {
   }
 
   return value.slice(0, 5);
+}
+
+function sortEntries(entries: IntimacyEntryWithAlias[]): IntimacyEntryWithAlias[] {
+  return [...entries].sort((first, second) => {
+    const dateComparison = second.occurred_on.localeCompare(first.occurred_on);
+
+    if (dateComparison !== 0) {
+      return dateComparison;
+    }
+
+    return second.created_at.localeCompare(first.created_at);
+  });
 }
 
 export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps) {
@@ -203,7 +249,15 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
 
   const [aliases, setAliases] = useState<PartnerAlias[]>([]);
 
-  const [formOpen, setFormOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<JournalViewMode>('calendar');
+
+  const [selectedDate, setSelectedDate] = useState(getTodayDateOnly());
+
+  const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
+
+  const [formMode, setFormMode] = useState<EntryFormMode>({
+    type: 'closed',
+  });
 
   const [occurredOn, setOccurredOn] = useState(formatDateOnly(getTodayDateOnly()));
 
@@ -231,9 +285,58 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
 
   const [isSaving, setIsSaving] = useState(false);
 
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const activeAliases = useMemo(() => aliases.filter((alias) => !alias.is_archived), [aliases]);
+
+  const selectedAlias = useMemo(
+    () => aliases.find((alias) => alias.id === partnerAliasId) ?? null,
+    [aliases, partnerAliasId],
+  );
+
+  const formAliases = useMemo(() => {
+    if (
+      selectedAlias &&
+      selectedAlias.is_archived &&
+      !activeAliases.some((alias) => alias.id === selectedAlias.id)
+    ) {
+      return [...activeAliases, selectedAlias];
+    }
+
+    return activeAliases;
+  }, [activeAliases, selectedAlias]);
+
+  const selectedDateEntries = useMemo(
+    () => entries.filter((entry) => entry.occurred_on === selectedDate),
+    [entries, selectedDate],
+  );
+
+  const markedDates = useMemo<CalendarMarkedDates>(() => {
+    const result: CalendarMarkedDates = {};
+
+    for (const entry of entries) {
+      result[entry.occurred_on] = {
+        dots: [
+          {
+            key: 'journal-entry',
+            color: colors.primary,
+          },
+        ],
+      };
+    }
+
+    const currentSelection = result[selectedDate] ?? {};
+
+    result[selectedDate] = {
+      ...currentSelection,
+      selected: true,
+      selectedColor: colors.primary,
+    };
+
+    return result;
+  }, [entries, selectedDate]);
 
   const loadJournalData = useCallback(async () => {
     if (!userId) {
@@ -246,11 +349,12 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
     try {
       const [aliasResult, entryResult] = await Promise.all([
         getPartnerAliases(userId),
-        getRecentIntimacyEntries(userId),
+
+        getRecentIntimacyEntries(userId, 100),
       ]);
 
       setAliases(aliasResult);
-      setEntries(entryResult);
+      setEntries(sortEntries(entryResult));
     } catch (error: unknown) {
       setLoadError(error instanceof Error ? error.message : 'Unable to load private journal data.');
     } finally {
@@ -277,7 +381,60 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
     setIntimacyCategory(null);
     setTagsInput('');
     setPrivateNote('');
-    setFormOpen(false);
+
+    setFormMode({
+      type: 'closed',
+    });
+  };
+
+  const openCreateForm = () => {
+    resetForm();
+
+    setFormMode({
+      type: 'create',
+    });
+  };
+
+  const openEditForm = (entry: IntimacyEntryWithAlias) => {
+    setOccurredOn(formatDateOnly(entry.occurred_on));
+
+    setApproximateTime(formatTime(entry.approximate_time) ?? '');
+
+    setPartnerAliasId(entry.partner_alias_id);
+
+    setLocationCategory(entry.location_category);
+
+    setProtectionMethod(entry.protection_method);
+
+    setConsentStatus(entry.consent_status);
+
+    setMoodBefore(entry.mood_before);
+    setMoodAfter(entry.mood_after);
+
+    setIntimacyCategory(entry.intimacy_category);
+
+    setTagsInput(entry.tags.join(', '));
+
+    setPrivateNote(entry.private_note ?? '');
+
+    setExpandedEntryId(null);
+
+    setFormMode({
+      type: 'edit',
+      entryId: entry.id,
+    });
+  };
+
+  const applySavedEntry = (savedEntry: IntimacyEntryWithAlias) => {
+    setEntries((currentEntries) => {
+      const exists = currentEntries.some((entry) => entry.id === savedEntry.id);
+
+      const nextEntries = exists
+        ? currentEntries.map((entry) => (entry.id === savedEntry.id ? savedEntry : entry))
+        : [savedEntry, ...currentEntries];
+
+      return sortEntries(nextEntries);
+    });
   };
 
   const handleSave = async () => {
@@ -311,7 +468,7 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
     setIsSaving(true);
 
     try {
-      const savedEntry = await createIntimacyEntry(userId, {
+      const input = {
         partnerAliasId: result.data.partnerAliasId,
 
         occurredOn: result.data.occurredOn,
@@ -333,19 +490,19 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
         tags: result.data.tagsInput,
 
         privateNote: result.data.privateNote,
-      });
+      };
 
-      setEntries((currentEntries) =>
-        [savedEntry, ...currentEntries].sort((first, second) => {
-          const dateComparison = second.occurred_on.localeCompare(first.occurred_on);
+      let savedEntry: IntimacyEntryWithAlias;
 
-          if (dateComparison !== 0) {
-            return dateComparison;
-          }
+      if (formMode.type === 'edit') {
+        savedEntry = await updateIntimacyEntry(formMode.entryId, userId, input);
+      } else {
+        savedEntry = await createIntimacyEntry(userId, input);
+      }
 
-          return second.created_at.localeCompare(first.created_at);
-        }),
-      );
+      applySavedEntry(savedEntry);
+
+      setSelectedDate(savedEntry.occurred_on);
 
       resetForm();
 
@@ -357,6 +514,57 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
       );
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const confirmDelete = (entry: IntimacyEntryWithAlias) => {
+    if (!userId || deletingId) {
+      return;
+    }
+
+    Alert.alert(
+      'Delete private entry?',
+      `Permanently delete the entry from ${formatDateOnly(entry.occurred_on)}?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            void handleDelete(entry.id);
+          },
+        },
+      ],
+    );
+  };
+
+  const handleDelete = async (entryId: string) => {
+    if (!userId) {
+      return;
+    }
+
+    setDeletingId(entryId);
+
+    try {
+      await deleteIntimacyEntry(entryId, userId);
+
+      setEntries((currentEntries) => currentEntries.filter((entry) => entry.id !== entryId));
+
+      setExpandedEntryId((currentId) => (currentId === entryId ? null : currentId));
+
+      if (formMode.type === 'edit' && formMode.entryId === entryId) {
+        resetForm();
+      }
+    } catch (error: unknown) {
+      Alert.alert(
+        'Unable to delete entry',
+        error instanceof Error ? error.message : 'Please try again.',
+      );
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -379,19 +587,21 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
           <Text style={styles.description}>Record only the details that are useful to you.</Text>
         </View>
 
-        {!formOpen ? (
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => {
-              setFormOpen(true);
-            }}
-            style={styles.addButton}
-          >
+        {formMode.type === 'closed' ? (
+          <Pressable accessibilityRole="button" onPress={openCreateForm} style={styles.addButton}>
             <Ionicons color={colors.textOnPrimary} name="add" size={19} />
 
             <Text style={styles.addButtonText}>Add</Text>
           </Pressable>
         ) : null}
+      </View>
+
+      <View style={styles.summaryCard}>
+        <SummaryItem label="Total entries" value={entries.length} />
+
+        <View style={styles.summaryDivider} />
+
+        <SummaryItem label="Selected date" value={selectedDateEntries.length} />
       </View>
 
       {loadError ? (
@@ -409,9 +619,11 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
         </View>
       ) : null}
 
-      {formOpen ? (
+      {formMode.type !== 'closed' ? (
         <View style={styles.formCard}>
-          <Text style={styles.formTitle}>New private entry</Text>
+          <Text style={styles.formTitle}>
+            {formMode.type === 'edit' ? 'Edit private entry' : 'New private entry'}
+          </Text>
 
           <Text style={styles.label}>Date</Text>
 
@@ -454,10 +666,12 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
               selected={partnerAliasId === null}
             />
 
-            {activeAliases.map((alias) => (
+            {formAliases.map((alias) => (
               <SelectionChip
                 key={alias.id}
-                label={`${alias.emoji ?? '👤'} ${alias.alias_name}`}
+                label={`${alias.emoji ?? '👤'} ${alias.alias_name}${
+                  alias.is_archived ? ' (Archived)' : ''
+                }`}
                 onPress={() => {
                   setPartnerAliasId(alias.id);
                 }}
@@ -562,7 +776,9 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
             {isSaving ? (
               <ActivityIndicator color={colors.textOnPrimary} />
             ) : (
-              <Text style={styles.saveButtonText}>Save private entry</Text>
+              <Text style={styles.saveButtonText}>
+                {formMode.type === 'edit' ? 'Update private entry' : 'Save private entry'}
+              </Text>
             )}
           </Pressable>
 
@@ -577,21 +793,339 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
         </View>
       ) : null}
 
-      <Text style={styles.sectionTitle}>Recent entries</Text>
+      <View style={styles.viewSelector}>
+        <ViewModeButton
+          emoji="📅"
+          label="Calendar"
+          onPress={() => {
+            setViewMode('calendar');
+          }}
+          selected={viewMode === 'calendar'}
+        />
+
+        <ViewModeButton
+          emoji="📋"
+          label="List"
+          onPress={() => {
+            setViewMode('list');
+          }}
+          selected={viewMode === 'list'}
+        />
+
+        <ViewModeButton
+          emoji="ℹ️"
+          label="Guide"
+          onPress={() => {
+            setViewMode('guide');
+          }}
+          selected={viewMode === 'guide'}
+        />
+      </View>
+
+      {viewMode === 'calendar' ? (
+        <JournalCalendarView
+          deletingId={deletingId}
+          entries={selectedDateEntries}
+          markedDates={markedDates}
+          onDelete={confirmDelete}
+          onEdit={openEditForm}
+          onSelectDate={setSelectedDate}
+          onToggleEntry={(entryId) => {
+            setExpandedEntryId((currentId) => (currentId === entryId ? null : entryId));
+          }}
+          selectedDate={selectedDate}
+          expandedEntryId={expandedEntryId}
+        />
+      ) : null}
+
+      {viewMode === 'list' ? (
+        <JournalListView
+          deletingId={deletingId}
+          entries={entries}
+          expandedEntryId={expandedEntryId}
+          onDelete={confirmDelete}
+          onEdit={openEditForm}
+          onToggleEntry={(entryId) => {
+            setExpandedEntryId((currentId) => (currentId === entryId ? null : entryId));
+          }}
+        />
+      ) : null}
+
+      {viewMode === 'guide' ? <JournalGuide /> : null}
+    </View>
+  );
+}
+
+type SummaryItemProps = {
+  label: string;
+  value: number;
+};
+
+function SummaryItem({ label, value }: SummaryItemProps) {
+  return (
+    <View style={styles.summaryItem}>
+      <Text style={styles.summaryValue}>{value}</Text>
+
+      <Text style={styles.summaryLabel}>{label}</Text>
+    </View>
+  );
+}
+
+type ViewModeButtonProps = {
+  emoji: string;
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+};
+
+function ViewModeButton({ emoji, label, selected, onPress }: ViewModeButtonProps) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{
+        selected,
+      }}
+      onPress={onPress}
+      style={[styles.viewButton, selected && styles.viewButtonSelected]}
+    >
+      <Text style={styles.viewEmoji}>{emoji}</Text>
+
+      <Text style={[styles.viewText, selected && styles.viewTextSelected]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+type JournalCalendarViewProps = {
+  selectedDate: string;
+  markedDates: CalendarMarkedDates;
+  entries: IntimacyEntryWithAlias[];
+  expandedEntryId: string | null;
+  deletingId: string | null;
+  onSelectDate: (date: string) => void;
+  onToggleEntry: (entryId: string) => void;
+  onEdit: (entry: IntimacyEntryWithAlias) => void;
+  onDelete: (entry: IntimacyEntryWithAlias) => void;
+};
+
+function JournalCalendarView({
+  selectedDate,
+  markedDates,
+  entries,
+  expandedEntryId,
+  deletingId,
+  onSelectDate,
+  onToggleEntry,
+  onEdit,
+  onDelete,
+}: JournalCalendarViewProps) {
+  return (
+    <>
+      <View style={styles.calendarCard}>
+        <Calendar
+          current={selectedDate}
+          enableSwipeMonths
+          firstDay={1}
+          markedDates={markedDates}
+          markingType="multi-dot"
+          onDayPress={(day) => {
+            onSelectDate(day.dateString);
+          }}
+          theme={{
+            backgroundColor: colors.surface,
+
+            calendarBackground: colors.surface,
+
+            todayTextColor: colors.primary,
+
+            selectedDayBackgroundColor: colors.primary,
+
+            selectedDayTextColor: colors.textOnPrimary,
+
+            arrowColor: colors.primary,
+
+            monthTextColor: colors.textPrimary,
+
+            textMonthFontWeight: '700',
+
+            textDayFontWeight: '500',
+
+            textDayHeaderFontWeight: '600',
+          }}
+        />
+      </View>
+
+      <View style={styles.calendarGuide}>
+        <View style={styles.calendarDot} />
+
+        <Text style={styles.calendarGuideText}>
+          A discreet dot indicates that a private entry exists on that date.
+        </Text>
+      </View>
+
+      <Text style={styles.sectionTitle}>{formatDateOnly(selectedDate)}</Text>
 
       {entries.length > 0 ? (
-        entries.map((entry) => <JournalEntryCard entry={entry} key={entry.id} />)
+        entries.map((entry) => (
+          <JournalEntryCard
+            deleting={deletingId === entry.id}
+            entry={entry}
+            expanded={expandedEntryId === entry.id}
+            key={entry.id}
+            onDelete={() => {
+              onDelete(entry);
+            }}
+            onEdit={() => {
+              onEdit(entry);
+            }}
+            onToggle={() => {
+              onToggleEntry(entry.id);
+            }}
+          />
+        ))
+      ) : (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyEmoji}>📅</Text>
+
+          <Text style={styles.emptyTitle}>No entry on this date</Text>
+
+          <Text style={styles.emptyText}>Select another date or add a new private entry.</Text>
+        </View>
+      )}
+    </>
+  );
+}
+
+type JournalListViewProps = {
+  entries: IntimacyEntryWithAlias[];
+  expandedEntryId: string | null;
+  deletingId: string | null;
+  onToggleEntry: (entryId: string) => void;
+  onEdit: (entry: IntimacyEntryWithAlias) => void;
+  onDelete: (entry: IntimacyEntryWithAlias) => void;
+};
+
+function JournalListView({
+  entries,
+  expandedEntryId,
+  deletingId,
+  onToggleEntry,
+  onEdit,
+  onDelete,
+}: JournalListViewProps) {
+  return (
+    <>
+      <Text style={styles.listIntro}>
+        Entries are ordered from newest to oldest. Private notes remain hidden until you expand an
+        entry.
+      </Text>
+
+      <Text style={styles.sectionTitle}>All private entries</Text>
+
+      {entries.length > 0 ? (
+        entries.map((entry) => (
+          <JournalEntryCard
+            deleting={deletingId === entry.id}
+            entry={entry}
+            expanded={expandedEntryId === entry.id}
+            key={entry.id}
+            onDelete={() => {
+              onDelete(entry);
+            }}
+            onEdit={() => {
+              onEdit(entry);
+            }}
+            onToggle={() => {
+              onToggleEntry(entry.id);
+            }}
+          />
+        ))
       ) : (
         <View style={styles.emptyCard}>
           <Text style={styles.emptyEmoji}>🔒</Text>
 
           <Text style={styles.emptyTitle}>No private entries yet</Text>
 
-          <Text style={styles.emptyText}>
-            Add an entry when you are ready. Every optional field can be left blank.
-          </Text>
+          <Text style={styles.emptyText}>Add an entry when you are ready.</Text>
         </View>
       )}
+    </>
+  );
+}
+
+function JournalGuide() {
+  return (
+    <>
+      <View style={styles.guideCard}>
+        <Text style={styles.guideTitle}>Journal guide</Text>
+
+        <GuideRow
+          emoji="📅"
+          text="Calendar markers are deliberately discreet and do not reveal entry details."
+          title="Calendar"
+        />
+
+        <GuideRow emoji="📋" text="List view shows entries from newest to oldest." title="List" />
+
+        <GuideRow
+          emoji="🔒"
+          text="Tap an entry to reveal its private details and notes."
+          title="Entry details"
+        />
+
+        <GuideRow
+          emoji="✏️"
+          text="Editing immediately updates both Calendar and List views."
+          title="Editing"
+        />
+
+        <GuideRow
+          emoji="🗑️"
+          text="Deletion is permanent and requires confirmation."
+          title="Deletion"
+        />
+      </View>
+
+      <View style={styles.guideCard}>
+        <Text style={styles.guideTitle}>Privacy information</Text>
+
+        <Text style={styles.guideParagraph}>
+          Entries belong only to your authenticated account. Partner aliases do not notify or
+          connect to another person.
+        </Text>
+
+        <Text style={styles.guideParagraph}>
+          Private journal records are not included in consent-based sharing.
+        </Text>
+
+        <Text style={styles.guideWarning}>
+          Protection records are informational only and do not confirm pregnancy, contraception, STI
+          status, or medical outcomes.
+        </Text>
+
+        <Text style={styles.guideWarning}>
+          Consent reflection is a private personal field and is not a legal consent record.
+        </Text>
+      </View>
+    </>
+  );
+}
+
+type GuideRowProps = {
+  emoji: string;
+  title: string;
+  text: string;
+};
+
+function GuideRow({ emoji, title, text }: GuideRowProps) {
+  return (
+    <View style={styles.guideRow}>
+      <Text style={styles.guideEmoji}>{emoji}</Text>
+
+      <View style={styles.guideContent}>
+        <Text style={styles.guideRowTitle}>{title}</Text>
+
+        <Text style={styles.guideText}>{text}</Text>
+      </View>
     </View>
   );
 }
@@ -658,9 +1192,21 @@ function OptionSection<T extends string>({
 
 type JournalEntryCardProps = {
   entry: IntimacyEntryWithAlias;
+  expanded: boolean;
+  deleting: boolean;
+  onToggle: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
 };
 
-function JournalEntryCard({ entry }: JournalEntryCardProps) {
+function JournalEntryCard({
+  entry,
+  expanded,
+  deleting,
+  onToggle,
+  onEdit,
+  onDelete,
+}: JournalEntryCardProps) {
   const time = formatTime(entry.approximate_time);
 
   const location = entry.location_category ? locationLabels[entry.location_category] : null;
@@ -669,48 +1215,133 @@ function JournalEntryCard({ entry }: JournalEntryCardProps) {
 
   return (
     <View style={styles.entryCard}>
-      <View style={styles.entryHeader}>
-        <View style={styles.entryIcon}>
-          <Text style={styles.entryEmoji}>{entry.partner_alias?.emoji ?? '🔒'}</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{
+          expanded,
+        }}
+        onPress={onToggle}
+        style={styles.entryPressable}
+      >
+        <View style={styles.entryHeader}>
+          <View style={styles.entryIcon}>
+            <Text style={styles.entryEmoji}>{entry.partner_alias?.emoji ?? '🔒'}</Text>
+          </View>
+
+          <View style={styles.entryHeading}>
+            <Text style={styles.entryDate}>
+              {formatDateOnly(entry.occurred_on)}
+              {time ? ` • ${time}` : ''}
+            </Text>
+
+            <Text style={styles.entryAlias}>
+              {entry.partner_alias?.alias_name ?? 'Private entry'}
+            </Text>
+          </View>
+
+          <Ionicons
+            color={colors.textMuted}
+            name={expanded ? 'chevron-up' : 'chevron-down'}
+            size={20}
+          />
         </View>
 
-        <View style={styles.entryHeading}>
-          <Text style={styles.entryDate}>
-            {formatDateOnly(entry.occurred_on)}
-            {time ? ` • ${time}` : ''}
-          </Text>
+        <View style={styles.entryPreview}>
+          {entry.intimacy_category ? (
+            <Text style={styles.detailText}>{categoryLabels[entry.intimacy_category]}</Text>
+          ) : null}
 
-          <Text style={styles.entryAlias}>
-            {entry.partner_alias?.alias_name ?? 'Private entry'}
-          </Text>
+          {entry.tags.length > 0 ? (
+            <Text style={styles.previewText}>
+              {entry.tags.length} {entry.tags.length === 1 ? 'tag' : 'tags'}
+            </Text>
+          ) : null}
+
+          {entry.private_note ? <Text style={styles.previewText}>🔒 Private note</Text> : null}
         </View>
-      </View>
+      </Pressable>
 
-      <View style={styles.entryDetails}>
-        {location ? <Text style={styles.detailText}>📍 {location}</Text> : null}
+      {expanded ? (
+        <View style={styles.expandedContent}>
+          <View style={styles.divider} />
 
-        {protection ? <Text style={styles.detailText}>🛡️ {protection}</Text> : null}
+          {location ? <DetailRow label="Location" value={`📍 ${location}`} /> : null}
 
-        {entry.mood_after ? (
-          <Text style={styles.detailText}>Mood after: {moodLabels[entry.mood_after]}</Text>
-        ) : null}
-      </View>
+          {protection ? <DetailRow label="Protection" value={`🛡️ ${protection}`} /> : null}
 
-      {entry.tags.length > 0 ? (
-        <View style={styles.tagContainer}>
-          {entry.tags.map((tag) => (
-            <View key={tag} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
+          <DetailRow label="Consent reflection" value={consentLabels[entry.consent_status]} />
+
+          {entry.mood_before ? (
+            <DetailRow label="Mood before" value={moodLabels[entry.mood_before]} />
+          ) : null}
+
+          {entry.mood_after ? (
+            <DetailRow label="Mood after" value={moodLabels[entry.mood_after]} />
+          ) : null}
+
+          {entry.intimacy_category ? (
+            <DetailRow label="Category" value={categoryLabels[entry.intimacy_category]} />
+          ) : null}
+
+          {entry.tags.length > 0 ? (
+            <View style={styles.tagContainer}>
+              {entry.tags.map((tag) => (
+                <View key={tag} style={styles.tag}>
+                  <Text style={styles.tagText}>{tag}</Text>
+                </View>
+              ))}
             </View>
-          ))}
+          ) : null}
+
+          {entry.private_note ? (
+            <View style={styles.noteCard}>
+              <Text style={styles.noteLabel}>🔒 Private note</Text>
+
+              <Text style={styles.noteText}>{entry.private_note}</Text>
+            </View>
+          ) : null}
+
+          <View style={styles.entryActions}>
+            <Pressable accessibilityRole="button" onPress={onEdit} style={styles.editButton}>
+              <Ionicons color={colors.primary} name="create-outline" size={19} />
+
+              <Text style={styles.editButtonText}>Edit</Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              disabled={deleting}
+              onPress={onDelete}
+              style={styles.deleteButton}
+            >
+              {deleting ? (
+                <ActivityIndicator color={colors.danger} size="small" />
+              ) : (
+                <>
+                  <Ionicons color={colors.danger} name="trash-outline" size={19} />
+
+                  <Text style={styles.deleteButtonText}>Delete</Text>
+                </>
+              )}
+            </Pressable>
+          </View>
         </View>
       ) : null}
+    </View>
+  );
+}
 
-      {entry.private_note ? (
-        <Text numberOfLines={2} style={styles.privateNotePreview}>
-          🔒 Private note saved
-        </Text>
-      ) : null}
+type DetailRowProps = {
+  label: string;
+  value: string;
+};
+
+function DetailRow({ label, value }: DetailRowProps) {
+  return (
+    <View style={styles.detailRow}>
+      <Text style={styles.detailLabel}>{label}</Text>
+
+      <Text style={styles.detailValue}>{value}</Text>
     </View>
   );
 }
@@ -760,6 +1391,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: colors.textOnPrimary,
+  },
+  summaryCard: {
+    flexDirection: 'row',
+    marginTop: 18,
+    paddingVertical: 16,
+    borderRadius: 17,
+    backgroundColor: colors.surface,
+  },
+  summaryItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  summaryValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.primary,
+  },
+  summaryLabel: {
+    marginTop: 3,
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  summaryDivider: {
+    width: StyleSheet.hairlineWidth,
+    backgroundColor: colors.divider,
   },
   errorCard: {
     marginTop: 14,
@@ -884,8 +1540,71 @@ const styles = StyleSheet.create({
   disabledButton: {
     opacity: 0.5,
   },
+  viewSelector: {
+    flexDirection: 'row',
+    marginTop: 25,
+    padding: 4,
+    borderRadius: 15,
+    backgroundColor: colors.primarySurface,
+  },
+  viewButton: {
+    flex: 1,
+    minHeight: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+  },
+  viewButtonSelected: {
+    backgroundColor: colors.surface,
+  },
+  viewEmoji: {
+    fontSize: 15,
+  },
+  viewText: {
+    marginLeft: 5,
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textMuted,
+  },
+  viewTextSelected: {
+    color: colors.primary,
+  },
+  calendarCard: {
+    overflow: 'hidden',
+    marginTop: 16,
+    borderRadius: 19,
+    backgroundColor: colors.surface,
+  },
+  calendarGuide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    padding: 13,
+    borderRadius: 13,
+    backgroundColor: colors.surface,
+  },
+  calendarDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: colors.primary,
+  },
+  calendarGuideText: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.textSecondary,
+  },
+  listIntro: {
+    marginTop: 18,
+    fontSize: 14,
+    lineHeight: 21,
+    color: colors.textSecondary,
+  },
   sectionTitle: {
-    marginTop: 27,
+    marginTop: 25,
     marginBottom: 10,
     fontSize: 18,
     fontWeight: '700',
@@ -893,9 +1612,12 @@ const styles = StyleSheet.create({
   },
   entryCard: {
     marginBottom: 12,
-    padding: 17,
+    padding: 16,
     borderRadius: 17,
     backgroundColor: colors.surface,
+  },
+  entryPressable: {
+    borderRadius: 14,
   },
   entryHeader: {
     flexDirection: 'row',
@@ -926,19 +1648,52 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textMuted,
   },
-  entryDetails: {
-    marginTop: 12,
+  entryPreview: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 10,
+  },
+  previewText: {
+    marginRight: 12,
+    marginTop: 3,
+    fontSize: 12,
+    color: colors.textMuted,
   },
   detailText: {
-    marginTop: 4,
-    fontSize: 13,
-    lineHeight: 19,
+    marginRight: 12,
+    marginTop: 3,
+    fontSize: 12,
     color: colors.textSecondary,
+  },
+  expandedContent: {
+    marginTop: 13,
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    marginBottom: 12,
+    backgroundColor: colors.divider,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 7,
+  },
+  detailLabel: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.textMuted,
+  },
+  detailValue: {
+    flex: 1.25,
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'right',
+    color: colors.textPrimary,
   },
   tagContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 10,
+    marginTop: 11,
   },
   tag: {
     marginRight: 7,
@@ -952,11 +1707,61 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.primary,
   },
-  privateNotePreview: {
-    marginTop: 8,
+  noteCard: {
+    marginTop: 10,
+    padding: 14,
+    borderRadius: 13,
+    backgroundColor: colors.surfaceSoft,
+  },
+  noteLabel: {
     fontSize: 12,
-    fontWeight: '600',
-    color: colors.textMuted,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  noteText: {
+    marginTop: 7,
+    fontSize: 13,
+    lineHeight: 20,
+    color: colors.textPrimary,
+  },
+  entryActions: {
+    flexDirection: 'row',
+    marginTop: 15,
+  },
+  editButton: {
+    flex: 1,
+    minHeight: 45,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 7,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 13,
+  },
+  editButtonText: {
+    marginLeft: 6,
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  deleteButton: {
+    flex: 1,
+    minHeight: 45,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 7,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    borderRadius: 13,
+    backgroundColor: colors.dangerSurface,
+  },
+  deleteButtonText: {
+    marginLeft: 6,
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.danger,
   },
   emptyCard: {
     alignItems: 'center',
@@ -980,5 +1785,54 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     textAlign: 'center',
     color: colors.textSecondary,
+  },
+  guideCard: {
+    marginTop: 16,
+    padding: 18,
+    borderRadius: 17,
+    backgroundColor: colors.surface,
+  },
+  guideTitle: {
+    marginBottom: 5,
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  guideRow: {
+    flexDirection: 'row',
+    marginTop: 15,
+  },
+  guideEmoji: {
+    width: 31,
+    fontSize: 19,
+  },
+  guideContent: {
+    flex: 1,
+  },
+  guideRowTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  guideText: {
+    marginTop: 3,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors.textSecondary,
+  },
+  guideParagraph: {
+    marginTop: 11,
+    fontSize: 14,
+    lineHeight: 21,
+    color: colors.textSecondary,
+  },
+  guideWarning: {
+    marginTop: 13,
+    padding: 13,
+    borderRadius: 12,
+    backgroundColor: colors.warningSurface,
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors.warning,
   },
 });
