@@ -8,6 +8,8 @@ import type {
   CyclePredictionCheckin,
   CyclePredictionResponseResult,
   RespondToCyclePredictionInput,
+  DailyCycleLog,
+  DailyCycleLogWriteInput,
 } from './types';
 
 const preferenceColumns = `
@@ -37,6 +39,19 @@ const cyclePredictionCheckinColumns = `
   response,
   actual_start_on,
   responded_at,
+  created_at,
+  updated_at
+`;
+
+const dailyCycleLogColumns = `
+  id,
+  owner_user_id,
+  logged_on,
+  flow_level,
+  mood,
+  energy_level,
+  symptoms,
+  private_note,
   created_at,
   updated_at
 `;
@@ -226,4 +241,94 @@ export async function getCyclePredictionCheckin(
   }
 
   return data as CyclePredictionCheckin | null;
+}
+
+export async function getDailyCycleLogs(
+  ownerUserId: string,
+  dateFrom: string,
+  dateTo: string,
+): Promise<DailyCycleLog[]> {
+  const { data, error } = await supabase
+    .from('daily_cycle_logs')
+    .select(dailyCycleLogColumns)
+    .eq('owner_user_id', ownerUserId)
+    .gte('logged_on', dateFrom)
+    .lte('logged_on', dateTo)
+    .order('logged_on', {
+      ascending: false,
+    });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []) as DailyCycleLog[];
+}
+
+export async function createDailyCycleLog(
+  ownerUserId: string,
+  input: DailyCycleLogWriteInput,
+): Promise<DailyCycleLog> {
+  const { data, error } = await supabase
+    .from('daily_cycle_logs')
+    .insert({
+      owner_user_id: ownerUserId,
+      logged_on: input.loggedOn,
+      flow_level: input.flowLevel,
+      mood: input.mood,
+      energy_level: input.energyLevel,
+      symptoms: input.symptoms,
+      private_note: input.privateNote,
+    })
+    .select(dailyCycleLogColumns)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as DailyCycleLog;
+}
+
+export async function updateDailyCycleLog(
+  logId: string,
+  ownerUserId: string,
+  input: DailyCycleLogWriteInput,
+): Promise<DailyCycleLog> {
+  const { data, error } = await supabase
+    .from('daily_cycle_logs')
+    .update({
+      logged_on: input.loggedOn,
+      flow_level: input.flowLevel,
+      mood: input.mood,
+      energy_level: input.energyLevel,
+      symptoms: input.symptoms,
+      private_note: input.privateNote,
+    })
+    .eq('id', logId)
+    .eq('owner_user_id', ownerUserId)
+    .select(dailyCycleLogColumns)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error('The daily cycle log could not be updated.');
+  }
+
+  return data as DailyCycleLog;
+}
+
+export async function deleteDailyCycleLog(logId: string, ownerUserId: string): Promise<void> {
+  const { error } = await supabase
+    .from('daily_cycle_logs')
+    .delete()
+    .eq('id', logId)
+    .eq('owner_user_id', ownerUserId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }

@@ -58,3 +58,45 @@ export type CyclePredictionResponseResult = {
   checkin: CyclePredictionCheckin;
   periodEntry: PeriodEntry | null;
 };
+
+export type CycleFlowLevel = 'spotting' | 'light' | 'medium' | 'heavy';
+
+export type CycleDailyMood = 'very_low' | 'low' | 'neutral' | 'good' | 'very_good';
+
+export type CycleEnergyLevel = 'very_low' | 'low' | 'medium' | 'high' | 'very_high';
+
+export type CycleSymptom =
+  | 'cramps'
+  | 'bloating'
+  | 'headache'
+  | 'backache'
+  | 'fatigue'
+  | 'breast_tenderness'
+  | 'nausea'
+  | 'acne'
+  | 'cravings'
+  | 'mood_changes'
+  | 'sleep_changes'
+  | 'other';
+
+export type DailyCycleLog = {
+  id: string;
+  owner_user_id: string;
+  logged_on: string;
+  flow_level: CycleFlowLevel | null;
+  mood: CycleDailyMood | null;
+  energy_level: CycleEnergyLevel | null;
+  symptoms: CycleSymptom[];
+  private_note: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DailyCycleLogWriteInput = {
+  loggedOn: string;
+  flowLevel: CycleFlowLevel | null;
+  mood: CycleDailyMood | null;
+  energyLevel: CycleEnergyLevel | null;
+  symptoms: CycleSymptom[];
+  privateNote: string | null;
+};
