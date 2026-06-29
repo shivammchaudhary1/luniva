@@ -12,6 +12,7 @@ import {
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { colors } from '../../theme/colors';
 import { useAuth } from '../auth/AuthProvider';
 
 import {
@@ -284,7 +285,7 @@ export function PeriodHistoryManager({
 
         {formMode.type === 'closed' ? (
           <Pressable accessibilityRole="button" onPress={openAddForm} style={styles.addButton}>
-            <Ionicons color="#FFFFFF" name="add" size={19} />
+            <Ionicons color={colors.textOnPrimary} name="add" size={19} />
 
             <Text style={styles.addButtonText}>Add</Text>
           </Pressable>
@@ -305,7 +306,7 @@ export function PeriodHistoryManager({
             maxLength={10}
             onChangeText={handleStartDateChange}
             placeholder="DD/MM/YYYY"
-            placeholderTextColor="#9B929F"
+            placeholderTextColor={colors.textDisabled}
             style={styles.input}
             value={startDate}
           />
@@ -318,7 +319,7 @@ export function PeriodHistoryManager({
             maxLength={10}
             onChangeText={setEndDate}
             placeholder="DD/MM/YYYY"
-            placeholderTextColor="#9B929F"
+            placeholderTextColor={colors.textDisabled}
             style={styles.input}
             value={endDate}
           />
@@ -336,7 +337,7 @@ export function PeriodHistoryManager({
             style={[styles.saveButton, isSaving && styles.disabledButton]}
           >
             {isSaving ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color={colors.textOnPrimary} />
             ) : (
               <Text style={styles.saveButtonText}>Save period</Text>
             )}
@@ -372,7 +373,7 @@ export function PeriodHistoryManager({
             }}
             style={styles.iconButton}
           >
-            <Ionicons color="#6E3B78" name="create-outline" size={20} />
+            <Ionicons color={colors.primary} name="create-outline" size={20} />
           </Pressable>
 
           <Pressable
@@ -385,9 +386,9 @@ export function PeriodHistoryManager({
             style={styles.iconButton}
           >
             {deletingId === entry.id ? (
-              <ActivityIndicator color="#A42D3F" size="small" />
+              <ActivityIndicator color={colors.danger} size="small" />
             ) : (
-              <Ionicons color="#A42D3F" name="trash-outline" size={20} />
+              <Ionicons color={colors.danger} name="trash-outline" size={20} />
             )}
           </Pressable>
         </View>
@@ -411,13 +412,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 19,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   description: {
     marginTop: 4,
     fontSize: 13,
     lineHeight: 19,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   addButton: {
     minHeight: 40,
@@ -425,47 +426,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 13,
     borderRadius: 12,
-    backgroundColor: '#6E3B78',
+    backgroundColor: colors.primary,
   },
   addButtonText: {
     marginLeft: 4,
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
   },
   formCard: {
     marginTop: 14,
     padding: 18,
     borderRadius: 17,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   formTitle: {
     marginBottom: 18,
     fontSize: 17,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   label: {
     marginBottom: 7,
     fontSize: 13,
     fontWeight: '600',
-    color: '#3E3145',
+    color: colors.textPrimary,
   },
   input: {
     minHeight: 50,
     marginBottom: 15,
     paddingHorizontal: 15,
     borderWidth: 1,
-    borderColor: '#DED6E2',
+    borderColor: colors.border,
     borderRadius: 13,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     fontSize: 16,
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   helperText: {
     fontSize: 12,
     lineHeight: 18,
-    color: '#807585',
+    color: colors.textMuted,
   },
   saveButton: {
     minHeight: 50,
@@ -473,12 +474,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 18,
     borderRadius: 13,
-    backgroundColor: '#6E3B78',
+    backgroundColor: colors.primary,
   },
   saveButtonText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
   },
   cancelButton: {
     alignItems: 'center',
@@ -487,7 +488,7 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   disabledButton: {
     opacity: 0.5,
@@ -498,7 +499,7 @@ const styles = StyleSheet.create({
     marginTop: 11,
     padding: 16,
     borderRadius: 15,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   entryContent: {
     flex: 1,
@@ -506,12 +507,12 @@ const styles = StyleSheet.create({
   entryTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   entryDate: {
     marginTop: 4,
     fontSize: 13,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   iconButton: {
     width: 40,

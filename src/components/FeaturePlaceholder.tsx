@@ -4,6 +4,8 @@ import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { colors } from '../theme/colors';
+
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
 type FeaturePlaceholderProps = {
@@ -32,7 +34,7 @@ export function FeaturePlaceholder({
 
         <View style={styles.card}>
           <View style={styles.iconContainer}>
-            <Ionicons color="#6E3B78" name={icon} size={32} />
+            <Ionicons color={colors.primary} name={icon} size={32} />
           </View>
 
           <Text style={styles.cardTitle}>Module foundation ready</Text>
@@ -41,7 +43,7 @@ export function FeaturePlaceholder({
         </View>
 
         <View style={styles.privacyCard}>
-          <Ionicons color="#1D8A57" name="shield-checkmark-outline" size={22} />
+          <Ionicons color={colors.success} name="shield-checkmark-outline" size={22} />
 
           <Text style={styles.privacyText}>
             Your information remains private and protected by your authenticated account.
@@ -55,7 +57,7 @@ export function FeaturePlaceholder({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8F6FB',
+    backgroundColor: colors.background,
   },
   container: {
     flexGrow: 1,
@@ -67,19 +69,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 1.2,
-    color: '#6E3B78',
+    color: colors.primary,
   },
   title: {
     marginTop: 10,
     fontSize: 34,
     fontWeight: '800',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   description: {
     marginTop: 10,
     fontSize: 16,
     lineHeight: 24,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   card: {
     alignItems: 'center',
@@ -87,7 +89,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 34,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   iconContainer: {
     width: 68,
@@ -95,21 +97,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 34,
-    backgroundColor: '#F0E7F3',
+    backgroundColor: colors.primarySurface,
   },
   cardTitle: {
     marginTop: 20,
     fontSize: 19,
     fontWeight: '700',
     textAlign: 'center',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   cardDescription: {
     marginTop: 9,
     fontSize: 15,
     lineHeight: 22,
     textAlign: 'center',
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   privacyCard: {
     flexDirection: 'row',
@@ -117,13 +119,13 @@ const styles = StyleSheet.create({
     marginTop: 20,
     padding: 18,
     borderRadius: 16,
-    backgroundColor: '#EAF6F0',
+    backgroundColor: colors.successSurface,
   },
   privacyText: {
     flex: 1,
     marginLeft: 12,
     fontSize: 14,
     lineHeight: 20,
-    color: '#286347',
+    color: colors.success,
   },
 });

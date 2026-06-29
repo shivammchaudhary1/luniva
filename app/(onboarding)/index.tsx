@@ -14,13 +14,12 @@ import {
   View,
 } from 'react-native';
 
-import type { GenderOption } from '../../src/features/profile/types';
-
-import { onboardingSchema } from '../../src/features/profile/validation';
-
+import { BrandLogo } from '../../src/components/BrandLogo';
 import { useAuth } from '../../src/features/auth/AuthProvider';
-
+import type { GenderOption } from '../../src/features/profile/types';
+import { onboardingSchema } from '../../src/features/profile/validation';
 import { supabase } from '../../src/lib/supabase/client';
+import { colors } from '../../src/theme/colors';
 
 const genderChoices: {
   label: string;
@@ -135,6 +134,10 @@ export default function OnboardingScreen() {
       style={styles.keyboardView}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <View style={styles.logoContainer}>
+          <BrandLogo size={145} />
+        </View>
+
         <Text style={styles.eyebrow}>WELCOME TO LUNIVA</Text>
 
         <Text style={styles.title}>Personalize your experience</Text>
@@ -152,7 +155,7 @@ export default function OnboardingScreen() {
             editable={!isSaving}
             onChangeText={setDisplayName}
             placeholder="Your name"
-            placeholderTextColor="#9B929F"
+            placeholderTextColor={colors.textDisabled}
             style={styles.input}
             value={displayName}
           />
@@ -258,7 +261,7 @@ export default function OnboardingScreen() {
           ]}
         >
           {isSaving ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={colors.textOnPrimary} />
           ) : (
             <Text style={styles.primaryButtonText}>Continue to Luniva</Text>
           )}
@@ -282,7 +285,7 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
-    backgroundColor: '#F8F6FB',
+    backgroundColor: colors.background,
   },
   container: {
     paddingHorizontal: 24,
@@ -293,19 +296,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 1.2,
-    color: '#6E3B78',
+    color: colors.primary,
   },
   title: {
     marginTop: 10,
     fontSize: 34,
     fontWeight: '800',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   subtitle: {
     marginTop: 10,
     fontSize: 16,
     lineHeight: 23,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   section: {
     marginTop: 28,
@@ -314,28 +317,28 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontSize: 14,
     fontWeight: '600',
-    color: '#3E3145',
+    color: colors.textPrimary,
   },
   input: {
     minHeight: 52,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: '#DED6E2',
+    borderColor: colors.border,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     fontSize: 16,
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   helperText: {
     marginTop: 5,
     fontSize: 14,
     lineHeight: 20,
-    color: '#807585',
+    color: colors.textMuted,
   },
   choiceContainer: {
     flexDirection: 'row',
@@ -347,21 +350,21 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: '#DED6E2',
+    borderColor: colors.border,
     borderRadius: 999,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   choiceSelected: {
-    borderColor: '#6E3B78',
-    backgroundColor: '#F0E7F3',
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySurface,
   },
   choiceText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   choiceTextSelected: {
-    color: '#6E3B78',
+    color: colors.primary,
   },
   moduleCard: {
     flexDirection: 'row',
@@ -369,7 +372,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     padding: 18,
     borderRadius: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   moduleText: {
     flex: 1,
@@ -378,13 +381,13 @@ const styles = StyleSheet.create({
   moduleTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   moduleDescription: {
     marginTop: 5,
     fontSize: 14,
     lineHeight: 20,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   confirmationRow: {
     flexDirection: 'row',
@@ -397,25 +400,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#A99FAE',
+    borderColor: colors.borderStrong,
     borderRadius: 7,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   checkboxSelected: {
-    borderColor: '#6E3B78',
-    backgroundColor: '#6E3B78',
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
   },
   checkmark: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
   },
   confirmationText: {
     flex: 1,
     marginLeft: 12,
     fontSize: 15,
     lineHeight: 21,
-    color: '#3E3145',
+    color: colors.textPrimary,
   },
   primaryButton: {
     minHeight: 54,
@@ -423,12 +426,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 30,
     borderRadius: 14,
-    backgroundColor: '#6E3B78',
+    backgroundColor: colors.primary,
   },
   primaryButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
   },
   signOutButton: {
     alignItems: 'center',
@@ -438,12 +441,16 @@ const styles = StyleSheet.create({
   signOutText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#6E3B78',
+    color: colors.primary,
   },
   buttonPressed: {
-    opacity: 0.82,
+    opacity: 0.86,
   },
   buttonDisabled: {
     opacity: 0.5,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
   },
 });

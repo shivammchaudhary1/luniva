@@ -13,7 +13,9 @@ import {
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { BrandLogo } from '../../../src/components/BrandLogo';
 import { useAuth } from '../../../src/features/auth/AuthProvider';
+import { colors } from '../../../src/theme/colors';
 
 type SettingRowProps = {
   label: string;
@@ -73,6 +75,10 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.logoContainer}>
+          <BrandLogo size={110} />
+        </View>
+
         <Text style={styles.eyebrow}>SETTINGS</Text>
 
         <Text style={styles.title}>Your account</Text>
@@ -81,7 +87,7 @@ export default function SettingsScreen() {
 
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Ionicons color="#6E3B78" name="person" size={28} />
+            <Ionicons color={colors.primary} name="person" size={28} />
           </View>
 
           <View style={styles.profileContent}>
@@ -141,10 +147,10 @@ export default function SettingsScreen() {
           ]}
         >
           {isSigningOut ? (
-            <ActivityIndicator color="#A42D3F" />
+            <ActivityIndicator color={colors.danger} />
           ) : (
             <>
-              <Ionicons color="#A42D3F" name="log-out-outline" size={21} />
+              <Ionicons color={colors.danger} name="log-out-outline" size={21} />
 
               <Text style={styles.signOutText}>Sign out</Text>
             </>
@@ -158,7 +164,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8F6FB',
+    backgroundColor: colors.background,
   },
   container: {
     paddingHorizontal: 24,
@@ -169,19 +175,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 1.2,
-    color: '#6E3B78',
+    color: colors.primary,
   },
   title: {
     marginTop: 9,
     fontSize: 34,
     fontWeight: '800',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   subtitle: {
     marginTop: 8,
     fontSize: 16,
     lineHeight: 23,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   profileCard: {
     flexDirection: 'row',
@@ -189,7 +195,7 @@ const styles = StyleSheet.create({
     marginTop: 26,
     padding: 19,
     borderRadius: 18,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   avatar: {
     width: 54,
@@ -197,7 +203,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 27,
-    backgroundColor: '#F0E7F3',
+    backgroundColor: colors.primarySurface,
   },
   profileContent: {
     flex: 1,
@@ -206,24 +212,24 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   profileEmail: {
     marginTop: 4,
     fontSize: 14,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   sectionTitle: {
     marginTop: 28,
     marginBottom: 10,
     fontSize: 18,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   card: {
     paddingHorizontal: 18,
     borderRadius: 17,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   settingRow: {
     flexDirection: 'row',
@@ -234,24 +240,24 @@ const styles = StyleSheet.create({
   settingLabel: {
     flex: 1,
     fontSize: 15,
-    color: '#3E3145',
+    color: colors.textPrimary,
   },
   settingValue: {
     flex: 1,
     fontSize: 14,
     fontWeight: '600',
     textAlign: 'right',
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: '#E7E0E9',
+    backgroundColor: colors.divider,
   },
   helperText: {
     marginTop: 13,
     fontSize: 13,
     lineHeight: 19,
-    color: '#807585',
+    color: colors.textMuted,
   },
   signOutButton: {
     minHeight: 54,
@@ -260,20 +266,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 28,
     borderWidth: 1,
-    borderColor: '#D89AA4',
+    borderColor: colors.danger,
     borderRadius: 14,
-    backgroundColor: '#FFF7F8',
+    backgroundColor: colors.dangerSurface,
   },
   signOutText: {
     marginLeft: 8,
     fontSize: 16,
     fontWeight: '700',
-    color: '#A42D3F',
+    color: colors.danger,
   },
   buttonPressed: {
-    opacity: 0.8,
+    opacity: 0.86,
   },
   buttonDisabled: {
     opacity: 0.5,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
   },
 });

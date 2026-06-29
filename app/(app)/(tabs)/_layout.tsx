@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
 
 import { useAuth } from '../../../src/features/auth/AuthProvider';
+import { colors } from '../../../src/theme/colors';
 
 export default function TabLayout() {
   const { profile } = useAuth();
@@ -14,17 +15,20 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#6E3B78',
-        tabBarInactiveTintColor: '#8A808E',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarHideOnKeyboard: true,
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
         },
         tabBarStyle: {
-          borderTopColor: '#E9E3EB',
-          backgroundColor: '#FFFFFF',
+          borderTopColor: colors.divider,
+          backgroundColor: colors.surface,
           paddingTop: 6,
+        },
+        sceneStyle: {
+          backgroundColor: colors.background,
         },
       }}
     >

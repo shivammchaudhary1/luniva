@@ -38,13 +38,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     [
       'expo-splash-screen',
       {
-        image: './assets/images/splash-icon.png',
-        imageWidth: 200,
+        image: './assets/branding/luniva-logo.png',
+        imageWidth: 260,
         resizeMode: 'contain',
-        backgroundColor: '#FFF8FA',
-        dark: {
-          backgroundColor: '#25171D',
-        },
+        backgroundColor: '#FFFFFF',
       },
     ],
   ],

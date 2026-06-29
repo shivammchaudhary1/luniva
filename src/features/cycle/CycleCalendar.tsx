@@ -15,6 +15,7 @@ import type { CycleDayInsight, UpcomingCycleItem } from './calendar';
 import type { CycleOverview, PeriodEntry } from './types';
 
 import { PeriodHistoryManager } from './PeriodHistoryManager';
+import { colors } from '../../theme/colors';
 
 type CalendarMarkedDates = NonNullable<ComponentProps<typeof Calendar>['markedDates']>;
 
@@ -28,12 +29,12 @@ type CycleCalendarProps = {
 };
 
 const markerColors = {
-  recordedPeriod: '#C53D4D',
-  predictedPeriod: '#E88FA1',
-  potentiallyFertile: '#E59B2F',
-  estimatedOvulation: '#7D54A3',
-  lowerLikelihood: '#7E91AD',
-  selected: '#6E3B78',
+  recordedPeriod: colors.periodRecorded,
+  predictedPeriod: colors.periodPredicted,
+  potentiallyFertile: colors.fertility,
+  estimatedOvulation: colors.ovulation,
+  lowerLikelihood: colors.lowerLikelihood,
+  selected: colors.primary,
 } as const;
 
 function getMarkerForInsight(insight: CycleDayInsight) {
@@ -248,13 +249,13 @@ function CalendarView({
             onSelectDate(day.dateString);
           }}
           theme={{
-            backgroundColor: '#FFFFFF',
-            calendarBackground: '#FFFFFF',
-            todayTextColor: '#6E3B78',
-            selectedDayBackgroundColor: '#6E3B78',
-            selectedDayTextColor: '#FFFFFF',
-            arrowColor: '#6E3B78',
-            monthTextColor: '#25182E',
+            backgroundColor: colors.surface,
+            calendarBackground: colors.surface,
+            todayTextColor: colors.primary,
+            selectedDayBackgroundColor: colors.primary,
+            selectedDayTextColor: colors.textOnPrimary,
+            arrowColor: colors.primary,
+            monthTextColor: colors.textPrimary,
             textMonthFontWeight: '700',
             textDayFontWeight: '500',
             textDayHeaderFontWeight: '600',
@@ -616,7 +617,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 4,
     borderRadius: 15,
-    backgroundColor: '#EDE7EF',
+    backgroundColor: colors.surfaceMuted,
   },
   viewButton: {
     flex: 1,
@@ -627,7 +628,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   viewButtonSelected: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   viewButtonEmoji: {
     fontSize: 16,
@@ -636,46 +637,46 @@ const styles = StyleSheet.create({
     marginLeft: 6,
     fontSize: 13,
     fontWeight: '600',
-    color: '#807585',
+    color: colors.textMuted,
   },
   viewButtonTextSelected: {
-    color: '#6E3B78',
+    color: colors.primary,
   },
   calendarCard: {
     overflow: 'hidden',
     marginTop: 16,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   selectedCard: {
     marginTop: 14,
     padding: 19,
     borderRadius: 17,
-    backgroundColor: '#F0E7F3',
+    backgroundColor: colors.primarySurface,
   },
   selectedDate: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#6E3B78',
+    color: colors.primary,
   },
   selectedTitle: {
     marginTop: 8,
     fontSize: 19,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   selectedDescription: {
     marginTop: 7,
     fontSize: 14,
     lineHeight: 21,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   noticeCard: {
     flexDirection: 'row',
     marginTop: 14,
     padding: 17,
     borderRadius: 17,
-    backgroundColor: '#FFF7E7',
+    backgroundColor: colors.warningSurface,
   },
   noticeEmoji: {
     fontSize: 21,
@@ -687,38 +688,38 @@ const styles = StyleSheet.create({
   noticeTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#614918',
+    color: colors.warning,
   },
   noticeText: {
     marginTop: 5,
     fontSize: 13,
     lineHeight: 19,
-    color: '#79612A',
+    color: colors.warning,
   },
   noticeWarning: {
     marginTop: 8,
     fontSize: 13,
     fontWeight: '600',
     lineHeight: 19,
-    color: '#8A4D26',
+    color: colors.warning,
   },
   sectionHeading: {
     marginTop: 25,
     marginBottom: 10,
     fontSize: 19,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   listIntro: {
     marginTop: 18,
     fontSize: 15,
     lineHeight: 22,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   listCard: {
     paddingHorizontal: 18,
     borderRadius: 17,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   upcomingRow: {
     flexDirection: 'row',
@@ -734,19 +735,19 @@ const styles = StyleSheet.create({
   upcomingTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   upcomingDate: {
     marginTop: 4,
     fontSize: 14,
     fontWeight: '600',
-    color: '#6E3B78',
+    color: colors.primary,
   },
   upcomingDescription: {
     marginTop: 4,
     fontSize: 13,
     lineHeight: 18,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   historyRow: {
     flexDirection: 'row',
@@ -763,29 +764,29 @@ const styles = StyleSheet.create({
   historyTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   historyDate: {
     marginTop: 4,
     fontSize: 14,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   table: {
     overflow: 'hidden',
     borderRadius: 17,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   tableHeader: {
     flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 13,
-    backgroundColor: '#F0E7F3',
+    backgroundColor: colors.primarySurface,
   },
   tableHeaderText: {
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.4,
-    color: '#6E3B78',
+    color: colors.primary,
   },
   tableRow: {
     flexDirection: 'row',
@@ -794,7 +795,7 @@ const styles = StyleSheet.create({
   },
   tableRowBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E7E0E9',
+    borderBottomColor: colors.divider,
   },
   eventColumn: {
     flex: 1.25,
@@ -806,32 +807,32 @@ const styles = StyleSheet.create({
   tableEventTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   tableDescription: {
     marginTop: 4,
     fontSize: 12,
     lineHeight: 17,
-    color: '#807585',
+    color: colors.textMuted,
   },
   tableDateText: {
     fontSize: 13,
     fontWeight: '600',
     lineHeight: 19,
     textAlign: 'right',
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   guideCard: {
     marginTop: 16,
     padding: 18,
     borderRadius: 17,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   guideTitle: {
     marginBottom: 6,
     fontSize: 18,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   guideRow: {
     flexDirection: 'row',
@@ -855,44 +856,44 @@ const styles = StyleSheet.create({
   guideRowTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   guideDescription: {
     marginTop: 3,
     fontSize: 13,
     lineHeight: 19,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   guideParagraph: {
     marginTop: 11,
     fontSize: 14,
     lineHeight: 21,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   guideWarning: {
     marginTop: 14,
     padding: 14,
     borderRadius: 12,
-    backgroundColor: '#FFF7E7',
+    backgroundColor: colors.warningSurface,
     fontSize: 13,
     fontWeight: '600',
     lineHeight: 20,
-    color: '#8A4D26',
+    color: colors.warning,
   },
   guideExample: {
     marginTop: 10,
     fontSize: 16,
     fontWeight: '700',
-    color: '#6E3B78',
+    color: colors.primary,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: '#E7E0E9',
+    backgroundColor: colors.divider,
   },
   emptyText: {
     padding: 20,
     fontSize: 14,
     lineHeight: 20,
-    color: '#807585',
+    color: colors.textMuted,
   },
 });

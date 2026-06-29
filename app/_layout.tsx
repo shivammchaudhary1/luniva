@@ -1,14 +1,20 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-
+import * as SplashScreen from 'expo-splash-screen';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { AppLoadingScreen } from '../src/components/AppLoadingScreen';
 import { AuthProvider, useAuth } from '../src/features/auth/AuthProvider';
+import { colors } from '../src/theme/colors';
+
+SplashScreen.setOptions({
+  duration: 700,
+  fade: true,
+});
 
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <StatusBar style="dark" />
       <RootNavigator />
     </AuthProvider>
   );
@@ -18,13 +24,7 @@ function RootNavigator() {
   const { session, profile, profileError, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-
-        <Text style={styles.loadingText}>Loading Luniva...</Text>
-      </View>
-    );
+    return <AppLoadingScreen />;
   }
 
   if (session && profileError) {
@@ -40,24 +40,31 @@ function RootNavigator() {
   const hasCompletedOnboarding = profile?.onboarding_completed === true;
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        animation: 'fade',
-      }}
-    >
-      <Stack.Protected guard={!session}>
-        <Stack.Screen name="(auth)" />
-      </Stack.Protected>
+    <>
+      <StatusBar backgroundColor={colors.background} style="dark" />
 
-      <Stack.Protected guard={Boolean(session) && !hasCompletedOnboarding}>
-        <Stack.Screen name="(onboarding)" />
-      </Stack.Protected>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: 'fade',
+          contentStyle: {
+            backgroundColor: colors.background,
+          },
+        }}
+      >
+        <Stack.Protected guard={!session}>
+          <Stack.Screen name="(auth)" />
+        </Stack.Protected>
 
-      <Stack.Protected guard={Boolean(session) && hasCompletedOnboarding}>
-        <Stack.Screen name="(app)" />
-      </Stack.Protected>
-    </Stack>
+        <Stack.Protected guard={Boolean(session) && !hasCompletedOnboarding}>
+          <Stack.Screen name="(onboarding)" />
+        </Stack.Protected>
+
+        <Stack.Protected guard={Boolean(session) && hasCompletedOnboarding}>
+          <Stack.Screen name="(app)" />
+        </Stack.Protected>
+      </Stack>
+    </>
   );
 }
 
@@ -67,24 +74,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 28,
-    backgroundColor: '#F8F6FB',
-  },
-  loadingText: {
-    marginTop: 14,
-    fontSize: 16,
-    color: '#685E6D',
+    backgroundColor: colors.background,
   },
   errorTitle: {
     fontSize: 21,
     fontWeight: '700',
     textAlign: 'center',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   errorText: {
     marginTop: 10,
     fontSize: 15,
     lineHeight: 22,
     textAlign: 'center',
-    color: '#C53D4D',
+    color: colors.danger,
   },
 });

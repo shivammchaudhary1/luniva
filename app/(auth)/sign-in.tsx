@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { BrandLogo } from '../../src/components/BrandLogo';
+
 import {
   ActivityIndicator,
   Alert,
@@ -17,6 +19,7 @@ import { Link } from 'expo-router';
 
 import { signInSchema } from '../../src/features/auth/validation';
 import { supabase } from '../../src/lib/supabase/client';
+import { colors } from '../../src/theme/colors';
 
 export default function SignInScreen() {
   const [email, setEmail] = useState('');
@@ -76,9 +79,13 @@ export default function SignInScreen() {
       style={styles.keyboardView}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <View style={styles.logoContainer}>
+          <BrandLogo size={170} />
+        </View>
+
         <Text style={styles.eyebrow}>WELCOME BACK</Text>
 
-        <Text style={styles.title}>Sign in to Luniva</Text>
+        <Text style={styles.title}>Welcome back</Text>
 
         <Text style={styles.subtitle}>Access your private wellness dashboard.</Text>
 
@@ -93,7 +100,7 @@ export default function SignInScreen() {
             keyboardType="email-address"
             onChangeText={setEmail}
             placeholder="you@example.com"
-            placeholderTextColor="#9B929F"
+            placeholderTextColor={colors.textDisabled}
             returnKeyType="next"
             style={styles.input}
             textContentType="emailAddress"
@@ -111,7 +118,7 @@ export default function SignInScreen() {
               void handleSignIn();
             }}
             placeholder="Enter your password"
-            placeholderTextColor="#9B929F"
+            placeholderTextColor={colors.textDisabled}
             returnKeyType="done"
             secureTextEntry
             style={styles.input}
@@ -132,7 +139,7 @@ export default function SignInScreen() {
             ]}
           >
             {isSubmitting ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color={colors.textOnPrimary} />
             ) : (
               <Text style={styles.primaryButtonText}>Sign in</Text>
             )}
@@ -156,7 +163,7 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
-    backgroundColor: '#F8F6FB',
+    backgroundColor: colors.background,
   },
   container: {
     flexGrow: 1,
@@ -168,19 +175,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 1.2,
-    color: '#6E3B78',
+    color: colors.primary,
   },
   title: {
     marginTop: 10,
     fontSize: 34,
     fontWeight: '800',
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   subtitle: {
     marginTop: 10,
     fontSize: 16,
     lineHeight: 23,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   form: {
     marginTop: 32,
@@ -189,18 +196,18 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontSize: 14,
     fontWeight: '600',
-    color: '#3E3145',
+    color: colors.textPrimary,
   },
   input: {
     minHeight: 52,
     marginBottom: 18,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: '#DED6E2',
+    borderColor: colors.border,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     fontSize: 16,
-    color: '#25182E',
+    color: colors.textPrimary,
   },
   primaryButton: {
     minHeight: 52,
@@ -208,15 +215,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 8,
     borderRadius: 14,
-    backgroundColor: '#6E3B78',
+    backgroundColor: colors.primary,
   },
   primaryButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.textOnPrimary,
   },
   buttonPressed: {
-    opacity: 0.85,
+    opacity: 0.86,
   },
   buttonDisabled: {
     opacity: 0.55,
@@ -228,12 +235,16 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 15,
-    color: '#685E6D',
+    color: colors.textSecondary,
   },
   linkText: {
     marginLeft: 6,
     fontSize: 15,
     fontWeight: '700',
-    color: '#6E3B78',
+    color: colors.primary,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 4,
   },
 });
