@@ -5,6 +5,8 @@ import type {
   CycleOverview,
   CyclePreferences,
   PeriodEntry,
+  CyclePredictionResponseResult,
+  RespondToCyclePredictionInput,
 } from './types';
 
 const preferenceColumns = `
@@ -144,4 +146,54 @@ export async function deletePeriodEntry(periodEntryId: string, ownerUserId: stri
   if (error) {
     throw new Error(error.message);
   }
+}
+
+type PredictionRpcPayload = {
+  checkin: {
+    id: string;
+    owner_user_id: string;
+    predicted_start_on: string;
+    response: RespondToCyclePredictionInput['response'];
+    actual_start_on: string | null;
+    responded_at: string;
+    created_at: string;
+    updated_at: string;
+  };
+
+  period_entry: {
+    id: string;
+    owner_user_id: string;
+    started_on: string;
+    ended_on: string | null;
+    created_at: string;
+    updated_at: string;
+  } | null;
+};
+
+export async function respondToCyclePrediction(
+  input: RespondToCyclePredictionInput,
+): Promise<CyclePredictionResponseResult> {
+  const { data, error } = await supabase.rpc('respond_to_cycle_prediction', {
+    p_predicted_start_on: input.predictedStartOn,
+
+    p_response: input.response,
+
+    p_actual_start_on: input.actualStartOn,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error('The prediction response could not be saved.');
+  }
+
+  const payload = data as PredictionRpcPayload;
+
+  return {
+    checkin: payload.checkin,
+
+    periodEntry: payload.period_entry,
+  };
 }
