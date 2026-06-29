@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -19,7 +20,20 @@ import { Calendar } from 'react-native-calendars';
 import { formatDateOnly, getTodayDateOnly } from '../../lib/date';
 
 import { colors } from '../../theme/colors';
+
 import { useAuth } from '../auth/AuthProvider';
+
+import { JournalFilterPanel } from './JournalFilterPanel';
+
+import { JournalInsights } from './JournalInsightsView';
+
+import {
+  createEmptyJournalFilters,
+  filterJournalEntries,
+  hasActiveJournalFilters,
+} from './journalFilters';
+
+import type { JournalFilterState } from './journalFilters';
 
 import {
   createIntimacyEntry,
@@ -47,7 +61,7 @@ type JournalEntryManagerProps = {
   aliasRevision: number;
 };
 
-type JournalViewMode = 'calendar' | 'list' | 'guide';
+type JournalViewMode = 'calendar' | 'list' | 'insights' | 'guide';
 
 type EntryFormMode =
   | {
@@ -285,6 +299,8 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
 
   const [isSaving, setIsSaving] = useState(false);
 
+  const [filters, setFilters] = useState<JournalFilterState>(createEmptyJournalFilters);
+
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -312,6 +328,10 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
     () => entries.filter((entry) => entry.occurred_on === selectedDate),
     [entries, selectedDate],
   );
+
+  const filteredResult = useMemo(() => filterJournalEntries(entries, filters), [entries, filters]);
+
+  const filtersActive = useMemo(() => hasActiveJournalFilters(filters), [filters]);
 
   const markedDates = useMemo<CalendarMarkedDates>(() => {
     const result: CalendarMarkedDates = {};
@@ -350,7 +370,7 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
       const [aliasResult, entryResult] = await Promise.all([
         getPartnerAliases(userId),
 
-        getRecentIntimacyEntries(userId, 100),
+        getRecentIntimacyEntries(userId, 500),
       ]);
 
       setAliases(aliasResult);
@@ -793,7 +813,12 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
         </View>
       ) : null}
 
-      <View style={styles.viewSelector}>
+      <ScrollView
+        contentContainerStyle={styles.viewSelectorContent}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.viewSelectorScroll}
+      >
         <ViewModeButton
           emoji="📅"
           label="Calendar"
@@ -813,6 +838,15 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
         />
 
         <ViewModeButton
+          emoji="📊"
+          label="Insights"
+          onPress={() => {
+            setViewMode('insights');
+          }}
+          selected={viewMode === 'insights'}
+        />
+
+        <ViewModeButton
           emoji="ℹ️"
           label="Guide"
           onPress={() => {
@@ -820,7 +854,7 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
           }}
           selected={viewMode === 'guide'}
         />
-      </View>
+      </ScrollView>
 
       {viewMode === 'calendar' ? (
         <JournalCalendarView
@@ -839,17 +873,33 @@ export function JournalEntryManager({ aliasRevision }: JournalEntryManagerProps)
       ) : null}
 
       {viewMode === 'list' ? (
-        <JournalListView
-          deletingId={deletingId}
-          entries={entries}
-          expandedEntryId={expandedEntryId}
-          onDelete={confirmDelete}
-          onEdit={openEditForm}
-          onToggleEntry={(entryId) => {
-            setExpandedEntryId((currentId) => (currentId === entryId ? null : entryId));
-          }}
-        />
+        <>
+          <JournalFilterPanel
+            aliases={aliases}
+            filters={filters}
+            onChange={setFilters}
+            onClear={() => {
+              setFilters(createEmptyJournalFilters());
+            }}
+            resultCount={filteredResult.entries.length}
+            validationError={filteredResult.error}
+          />
+
+          <JournalListView
+            deletingId={deletingId}
+            entries={filteredResult.entries}
+            expandedEntryId={expandedEntryId}
+            hasActiveFilters={filtersActive}
+            onDelete={confirmDelete}
+            onEdit={openEditForm}
+            onToggleEntry={(entryId) => {
+              setExpandedEntryId((currentId) => (currentId === entryId ? null : entryId));
+            }}
+          />
+        </>
       ) : null}
+
+      {viewMode === 'insights' ? <JournalInsights entries={entries} /> : null}
 
       {viewMode === 'guide' ? <JournalGuide /> : null}
     </View>
@@ -999,6 +1049,7 @@ type JournalListViewProps = {
   entries: IntimacyEntryWithAlias[];
   expandedEntryId: string | null;
   deletingId: string | null;
+  hasActiveFilters: boolean;
   onToggleEntry: (entryId: string) => void;
   onEdit: (entry: IntimacyEntryWithAlias) => void;
   onDelete: (entry: IntimacyEntryWithAlias) => void;
@@ -1008,6 +1059,7 @@ function JournalListView({
   entries,
   expandedEntryId,
   deletingId,
+  hasActiveFilters,
   onToggleEntry,
   onEdit,
   onDelete,
@@ -1043,9 +1095,15 @@ function JournalListView({
         <View style={styles.emptyCard}>
           <Text style={styles.emptyEmoji}>🔒</Text>
 
-          <Text style={styles.emptyTitle}>No private entries yet</Text>
+          <Text style={styles.emptyTitle}>
+            {hasActiveFilters ? 'No matching entries' : 'No private entries yet'}
+          </Text>
 
-          <Text style={styles.emptyText}>Add an entry when you are ready.</Text>
+          <Text style={styles.emptyText}>
+            {hasActiveFilters
+              ? 'Change or clear the filters to see more entries.'
+              : 'Add an entry when you are ready.'}
+          </Text>
         </View>
       )}
     </>
@@ -1540,15 +1598,18 @@ const styles = StyleSheet.create({
   disabledButton: {
     opacity: 0.5,
   },
-  viewSelector: {
-    flexDirection: 'row',
+  viewSelectorScroll: {
     marginTop: 25,
+  },
+
+  viewSelectorContent: {
     padding: 4,
     borderRadius: 15,
     backgroundColor: colors.primarySurface,
   },
   viewButton: {
     flex: 1,
+    minWidth: 105,
     minHeight: 46,
     flexDirection: 'row',
     alignItems: 'center',
