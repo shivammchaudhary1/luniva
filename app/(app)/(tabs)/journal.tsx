@@ -8,7 +8,12 @@ import { PartnerAliasManager } from '../../../src/features/journal/PartnerAliasM
 
 import { colors } from '../../../src/theme/colors';
 
+import { useState } from 'react';
+
+import { JournalEntryManager } from '../../../src/features/journal/JournalEntryManager';
+
 export default function JournalScreen() {
+  const [aliasRevision, setAliasRevision] = useState(0);
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -43,7 +48,13 @@ export default function JournalScreen() {
           </View>
         </View>
 
-        <PartnerAliasManager />
+        <PartnerAliasManager
+          onAliasesChanged={() => {
+            setAliasRevision((currentRevision) => currentRevision + 1);
+          }}
+        />
+
+        <JournalEntryManager aliasRevision={aliasRevision} />
 
         <View style={styles.nextCard}>
           <Text style={styles.nextEyebrow}>NEXT JOURNAL STEP</Text>

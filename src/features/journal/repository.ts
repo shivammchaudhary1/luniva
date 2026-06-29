@@ -1,6 +1,11 @@
 import { supabase } from '../../lib/supabase/client';
 
-import type { PartnerAlias, PartnerAliasWriteInput } from './types';
+import type {
+  IntimacyEntryWithAlias,
+  IntimacyEntryWriteInput,
+  PartnerAlias,
+  PartnerAliasWriteInput,
+} from './types';
 
 const partnerAliasColumns = `
   id,
@@ -13,6 +18,31 @@ const partnerAliasColumns = `
   is_archived,
   created_at,
   updated_at
+`;
+
+const intimacyEntryColumns = `
+  id,
+  owner_user_id,
+  partner_alias_id,
+  occurred_on,
+  approximate_time,
+  location_category,
+  protection_method,
+  consent_status,
+  mood_before,
+  mood_after,
+  intimacy_category,
+  tags,
+  private_note,
+  created_at,
+  updated_at,
+  partner_alias:partner_aliases (
+    id,
+    alias_name,
+    emoji,
+    color_key,
+    is_archived
+  )
 `;
 
 export async function getPartnerAliases(ownerUserId: string): Promise<PartnerAlias[]> {
@@ -124,4 +154,57 @@ export async function deletePartnerAlias(aliasId: string, ownerUserId: string): 
   if (error) {
     throw new Error(error.message);
   }
+}
+
+export async function getRecentIntimacyEntries(
+  ownerUserId: string,
+  limit = 20,
+): Promise<IntimacyEntryWithAlias[]> {
+  const { data, error } = await supabase
+    .from('intimacy_entries')
+    .select(intimacyEntryColumns)
+    .eq('owner_user_id', ownerUserId)
+    .order('occurred_on', {
+      ascending: false,
+    })
+    .order('created_at', {
+      ascending: false,
+    })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []) as unknown as IntimacyEntryWithAlias[];
+}
+
+export async function createIntimacyEntry(
+  ownerUserId: string,
+  input: IntimacyEntryWriteInput,
+): Promise<IntimacyEntryWithAlias> {
+  const { data, error } = await supabase
+    .from('intimacy_entries')
+    .insert({
+      owner_user_id: ownerUserId,
+      partner_alias_id: input.partnerAliasId,
+      occurred_on: input.occurredOn,
+      approximate_time: input.approximateTime,
+      location_category: input.locationCategory,
+      protection_method: input.protectionMethod,
+      consent_status: input.consentStatus,
+      mood_before: input.moodBefore,
+      mood_after: input.moodAfter,
+      intimacy_category: input.intimacyCategory,
+      tags: input.tags,
+      private_note: input.privateNote,
+    })
+    .select(intimacyEntryColumns)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as unknown as IntimacyEntryWithAlias;
 }
