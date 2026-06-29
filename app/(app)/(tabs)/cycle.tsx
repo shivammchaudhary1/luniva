@@ -37,6 +37,8 @@ import { CyclePredictionCheckinCard } from '../../../src/features/cycle/CyclePre
 
 import { getNextPredictedPeriodStart } from '../../../src/features/cycle/prediction';
 
+import { DailyCycleLogManager } from '../../../src/features/cycle/DailyCycleLogManager';
+
 export default function CycleScreen() {
   const { user } = useAuth();
   const userId = user?.id;
@@ -275,6 +277,8 @@ export default function CycleScreen() {
               overview={overview}
             />
           ) : null}
+
+          <DailyCycleLogManager />
 
           {predictedStartOn ? (
             <CyclePredictionCheckinCard
